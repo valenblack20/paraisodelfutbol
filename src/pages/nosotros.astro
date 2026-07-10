@@ -1,0 +1,97 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = true;
+---
+
+<Layout title="Quiénes Somos - Pasión Familiar">
+  
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
+    
+    <!-- Acentos celestes y dorados de fondo -->
+    <div class="absolute top-0 right-0 w-80 h-80 bg-celeste-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="bottom-0 left-0 w-80 h-80 bg-gold-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      
+      <!-- Contenido de Texto -->
+      <div class="space-y-6">
+        <span class="text-xs text-gold-500 font-bold tracking-widest uppercase block">Nuestra Historia</span>
+        
+        <h1 class="text-4xl sm:text-5xl font-extrabold uppercase leading-tight">
+          Un Emprendimiento <span class="text-celeste-400">Familiar</span> Unido por la Pasión
+        </h1>
+        
+        <div class="flex text-gold-500 space-x-1 text-base my-2" aria-label="Tres estrellas doradas">
+          <span>★</span><span>★</span><span>★</span>
+        </div>
+
+        <p class="text-sm text-neutral-300 leading-relaxed">
+          En *El Paraíso del Fútbol*, no solo vendemos camisetas; vendemos la emoción que nos une a todos cada fin de semana. Nacimos en el living de nuestra casa, inspirados por el amor al potrero y la locura inolvidable de ver a la Selección Argentina alzar su tercera copa del mundo en Qatar.
+        </p>
+
+        <p class="text-sm text-neutral-300 leading-relaxed">
+          Como familia futbolera, sabemos lo que significa vestir los colores de tu club o de tu país. Por eso nos enfocamos en ofrecer camisetas con acabados premium, telas respirables de alta tecnología y detalles bordados impecables. Todo esto a un precio justo, ofreciendo opciones tanto para el hincha que quiere su camiseta individual (Minorista) como para revendedores y clubes de barrio de toda la Argentina (Mayorista).
+        </p>
+
+        <p class="text-sm text-neutral-400 italic">
+          "Para nosotros, cada camiseta es un abrazo de gol en el último minuto."
+        </p>
+
+        <!-- Valores principales -->
+        <div class="grid grid-cols-2 gap-6 pt-6 border-t border-neutral-900">
+          <div>
+            <h4 class="text-sm font-bold text-neutral-100 uppercase tracking-wide">Compromiso Familiar</h4>
+            <p class="text-xs text-neutral-400 mt-1">Atención personalizada y honestidad en cada uno de tus pedidos.</p>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-neutral-100 uppercase tracking-wide">Envíos Seguros</h4>
+            <p class="text-xs text-neutral-400 mt-1">Llegamos a cada rincón de la República Argentina con embalaje de protección.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen representativa o Bloque Decorativo -->
+      <div class="space-y-6">
+        <div class="aspect-square bg-gradient-to-tr from-neutral-900 to-neutral-950 border border-neutral-800 rounded-2xl p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-celeste-500/10 rounded-full blur-2xl group-hover:bg-celeste-500/20 transition-all duration-500"></div>
+          
+          <!-- Tres estrellas arriba -->
+          <div class="text-gold-500 text-3xl font-extrabold select-none">★★★</div>
+
+          <div class="space-y-4 relative z-10">
+            <h3 class="text-xl font-bold uppercase text-neutral-100">
+              ¿Por qué elegir paraisodelfutbol.ar?
+            </h3>
+            <ul class="text-xs text-neutral-400 space-y-2.5">
+              <li class="flex items-center gap-2">
+                <span class="text-celeste-400 font-bold text-sm">✓</span> Réplicas G5 / Calidad de Importación exacta.
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-celeste-400 font-bold text-sm">✓</span> Compra mayorista súper accesible desde 6 prendas variadas.
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-celeste-400 font-bold text-sm">✓</span> WhatsApp directo con nosotros para despejar cualquier consulta.
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-celeste-400 font-bold text-sm">✓</span> Medios de pago seguros: Transferencia bancaria y Mercado Pago.
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-6">
+            <a 
+              href="https://wa.me/5491100000000" 
+              target="_blank" 
+              class="w-full bg-neutral-800 hover:bg-gold-500 text-neutral-200 hover:text-neutral-950 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300"
+            >
+              Hablá Directo con la Familia
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</Layout>

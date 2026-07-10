@@ -1,0 +1,66 @@
+---
+// Footer.astro
+---
+
+<footer class="bg-neutral-950 border-t border-neutral-900 text-neutral-400 py-12 mt-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Identidad de Marca -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-bold text-neutral-100 tracking-wider">
+          EL PARAÍSO <span class="text-gold-500">DEL FÚTBOL</span>
+        </h3>
+        <p class="text-sm leading-relaxed max-w-sm">
+          Llevamos en la piel la pasión más grande del mundo. Camisetas nacionales, internacionales y clubes con envíos a todo el país. ¡Ventas minoristas y mayoristas!
+        </p>
+        <div class="text-gold-500 font-bold flex items-center gap-1">
+          <span>Campeones del Mundo</span>
+          <span>★★★</span>
+        </div>
+      </div>
+
+      <!-- Links rápidos -->
+      <div class="space-y-4">
+        <h4 class="text-sm font-semibold text-neutral-200 tracking-widest uppercase">Navegación</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/" class="hover:text-celeste-400 transition-colors">Inicio</a></li>
+          <li><a href="/productos" class="hover:text-celeste-400 transition-colors">Catálogo de Camisetas</a></li>
+          <li><a href="/nosotros" class="hover:text-celeste-400 transition-colors">Quiénes Somos</a></li>
+          <li><a href="/admin" class="hover:text-gold-400 transition-colors">Panel ABM</a></li>
+        </ul>
+      </div>
+
+      <!-- Contacto e Información -->
+      <div class="space-y-4">
+        <h4 class="text-sm font-semibold text-neutral-200 tracking-widest uppercase">Atención al Cliente</h4>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-celeste-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Buenos Aires, Argentina (Envíos a todo el país)</span>
+          </li>
+          <li class="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-celeste-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span>contacto@paraisodelfutbol.ar</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Separador y Copyright -->
+    <div class="border-t border-neutral-900 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs">
+      <p>&copy; {new Date().getFullYear()} El Paraíso del Fútbol. Todos los derechos reservados. paraisodelfutbol.ar</p>
+      <p class="mt-2 md:mt-0 flex items-center gap-1">
+        Diseñado con pasión futbolera
+        <span class="text-red-500">❤️</span>
+        en Argentina
+      </p>
+    </div>
+  </div>
+</footer>

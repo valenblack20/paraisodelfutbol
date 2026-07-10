@@ -1,0 +1,106 @@
+---
+// Navbar.astro
+---
+
+<header class="fixed top-0 left-0 right-0 z-40 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    
+    <!-- Logo & Nombre -->
+    <a href="/" class="flex items-center space-x-2 group">
+      <div class="flex flex-col">
+        <span class="text-xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-celeste-400 via-white to-celeste-400 group-hover:from-gold-400 group-hover:to-gold-500 transition-all duration-300">
+          EL PARAÍSO
+        </span>
+        <span class="text-xs font-semibold tracking-widest text-gold-500 flex items-center gap-1">
+          DEL FÚTBOL
+          <span class="text-[9px] text-white">★★★</span>
+        </span>
+      </div>
+    </a>
+
+    <!-- Menú Desktop -->
+    <nav class="hidden md:flex items-center space-x-8">
+      <a href="/" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Inicio</a>
+      <a href="/productos" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Productos</a>
+      <a href="/nosotros" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Quiénes Somos</a>
+      <a href="/admin" class="text-sm font-medium text-neutral-400 hover:text-gold-400 transition-colors flex items-center gap-1">
+        <span>Admin Panel</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </a>
+    </nav>
+
+    <!-- Botón Carrito & Menú Mobile -->
+    <div class="flex items-center space-x-4">
+      <!-- Carrito Trigger -->
+      <button 
+        id="cart-trigger" 
+        class="relative p-2 text-neutral-300 hover:text-gold-500 hover:scale-105 transition-all duration-200 focus:outline-none"
+        aria-label="Abrir carrito de compras"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <span 
+          id="cart-badge" 
+          class="absolute -top-1 -right-1 bg-celeste-500 text-neutral-950 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-neutral-950 scale-0 transition-transform duration-300"
+        >
+          0
+        </span>
+      </button>
+
+      <!-- Hamburguesa Mobile -->
+      <button 
+        id="mobile-menu-btn" 
+        class="p-2 md:hidden text-neutral-300 hover:text-celeste-400 focus:outline-none"
+        aria-label="Abrir menú"
+      >
+        <svg id="menu-icon-hamburger" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        <svg id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú Desplegable Mobile -->
+  <div id="mobile-menu" class="hidden md:hidden bg-neutral-950 border-b border-neutral-900 animate-fade-in-up">
+    <div class="px-4 pt-2 pb-6 space-y-4">
+      <a href="/" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Inicio</a>
+      <a href="/productos" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Productos</a>
+      <a href="/nosotros" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Quiénes Somos</a>
+      <a href="/admin" class="block text-base font-semibold text-gold-500 hover:text-gold-400 py-2 border-t border-neutral-900">
+        Panel Administrador ★★★
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Manejo del menú mobile
+  const setupMobileMenu = () => {
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const hamburger = document.getElementById('menu-icon-hamburger');
+    const close = document.getElementById('menu-icon-close');
+
+    if (btn && menu && hamburger && close) {
+      btn.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+        hamburger.classList.toggle('hidden');
+        close.classList.toggle('hidden');
+      });
+    }
+  };
+
+  // Escuchar tanto en carga inicial como tras ViewTransitions
+  document.addEventListener('astro:page-load', () => {
+    setupMobileMenu();
+    
+    // Disparar evento para actualizar contador de carrito en navbar
+    document.dispatchEvent(new CustomEvent('request-cart-update'));
+  });
+</script>

@@ -1,0 +1,64 @@
+---
+import { ViewTransitions } from 'astro:transitions';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import Cart from '../components/Cart.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { 
+  title, 
+  description = "El Paraíso del Fútbol - Tu tienda online de camisetas de fútbol en Argentina. Ventas mayoristas y minoristas con envíos a todo el país. Acentos celestes y dorados del campeón." 
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- SEO Meta Tags -->
+    <title>{title} | El Paraíso del Fútbol</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} | El Paraíso del Fútbol`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://paraisodelfutbol.ar" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <ViewTransitions />
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 flex flex-col min-h-screen">
+    <!-- Navbar principal -->
+    <Navbar />
+
+    <!-- Contenedor principal -->
+    <main class="flex-grow pt-20">
+      <slot />
+    </main>
+
+    <!-- Footer de la página -->
+    <Footer />
+
+    <!-- Componente del Carrito Lateral -->
+    <Cart />
+
+    <!-- Botón flotante de WhatsApp -->
+    <WhatsAppButton />
+    
+    <style is:global>
+      /* Transiciones suaves entre páginas */
+      html {
+        scroll-behavior: smooth;
+      }
+    </style>
+  </body>
+</html>

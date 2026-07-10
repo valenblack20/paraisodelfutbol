@@ -1,0 +1,171 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CamisetaCard from '../components/CamisetaCard.astro';
+import { query } from '../lib/db.js';
+
+// Habilitamos rendering híbrido (se puede prerenderizar estático si se desea, o dinámico)
+export const prerender = true;
+
+// Obtener todas las camisetas de la base de datos
+let camisetas = [];
+try {
+  camisetas = await query('SELECT * FROM camisetas');
+} catch (e) {
+  console.error('Error cargando camisetas en catálogo:', e);
+}
+---
+
+<Layout title="Catálogo de Camisetas - El Paraíso del Fútbol">
+  
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Cabecera del catálogo -->
+    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+      <div class="inline-flex items-center space-x-1 text-gold-500 text-sm font-semibold uppercase tracking-widest">
+        <span>Catálogo Oficial</span>
+        <span>★★★</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold uppercase">
+        Nuestras <span class="text-celeste-400">Camisetas</span>
+      </h1>
+      <p class="text-sm text-neutral-400">
+        Filtrá por tu categoría preferida y encontrá tu camiseta ideal. Recordá que sumando 6 unidades o más, accedés automáticamente a precios de fábrica en todo el carrito.
+      </p>
+    </div>
+
+    <!-- Botones de Filtro -->
+    <div class="flex flex-wrap justify-center gap-3 mb-12">
+      <button 
+        class="filter-btn bg-gold-500 text-neutral-950 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-gold-500 transition-all duration-300 hover:scale-105 active:scale-95"
+        data-filter="all"
+      >
+        Todas
+      </button>
+      <button 
+        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+        data-filter="Clubes"
+      >
+        Clubes
+      </button>
+      <button 
+        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+        data-filter="Selecciones"
+      >
+        Selecciones
+      </button>
+      <button 
+        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+        data-filter="Nacionales"
+      >
+        Nacionales
+      </button>
+      <button 
+        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+        data-filter="Internacionales"
+      >
+        Internacionales
+      </button>
+    </div>
+
+    <!-- Mensaje sin productos -->
+    <div id="no-products-msg" class="hidden text-center py-20 text-neutral-500">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-neutral-800 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-base font-semibold">No se encontraron camisetas en esta categoría.</p>
+    </div>
+
+    <!-- Grilla de Camisetas -->
+    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      {camisetas.map((camiseta) => (
+        <div class="product-item-wrapper" data-category={camiseta.categoria}>
+          <CamisetaCard 
+            id={camiseta.id}
+            codigo_foto={camiseta.codigo_foto}
+            nombre={camiseta.nombre}
+            descripcion={camiseta.descripcion}
+            precio_minorista={Number(camiseta.precio_minorista)}
+            precio_mayorista={Number(camiseta.precio_mayorista)}
+            categoria={camiseta.categoria}
+            stock={camiseta.stock}
+          />
+        </div>
+      ))}
+    </div>
+
+  </section>
+
+</Layout>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const items = document.querySelectorAll('.product-item-wrapper');
+    const noProductsMsg = document.getElementById('no-products-msg');
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+
+        // Actualizar estados visuales de los botones de filtro
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-gold-500', 'text-neutral-950', 'border-gold-500');
+          b.classList.add('bg-neutral-900', 'text-neutral-400', 'border-neutral-800');
+        });
+        btn.classList.remove('bg-neutral-900', 'text-neutral-400', 'border-neutral-800');
+        btn.classList.add('bg-gold-500', 'text-neutral-950', 'border-gold-500');
+
+        // Filtrar productos
+        let visibleCount = 0;
+        items.forEach(item => {
+          const category = item.getAttribute('data-category');
+          // Nacionales e Internacionales pueden ser subconjuntos o etiquetas cruzadas.
+          // Si el filtro es "all", mostramos todos.
+          // Si no, verificamos si la categoría coincide exactamente,
+          // o si coincide de forma cruzada (por ejemplo, si la categoría es 'Clubes' y queremos nacionales,
+          // o basándonos en si el nombre/descripción es de argentina vs afuera).
+          // Para mantenerlo robusto y simple, el filtro busca coincidencia exacta con la categoría o si es "all".
+          // Nota: El usuario especificó: filtros básicos (Nacionales, Internacionales, Clubes, Selecciones).
+          // Si el producto tiene categoría "Clubes" pero el filtro es "Nacionales", podemos catalogar 
+          // a Boca/River como Nacionales. Hagamos que las categorías cargadas cubran esto o que el filtro
+          // haga matches lógicos simples:
+          // Nacionales: 'Clubes' argentinos (Boca, River) + 'Selecciones' (Argentina).
+          // Internacionales: 'Clubes' europeos (Real Madrid) + 'Selecciones' (Francia, etc.) + 'Internacionales'.
+          
+          let show = false;
+          if (filter === 'all') {
+            show = true;
+          } else if (filter === 'Clubes' || filter === 'Selecciones') {
+            show = (category === filter);
+          } else if (filter === 'Nacionales') {
+            // Boca, River, Argentina son Nacionales
+            const itemName = (item.querySelector('h3')?.innerText || '').toLowerCase();
+            show = (category === 'Selecciones' && itemName.includes('arg')) || 
+                   (category === 'Clubes' && (itemName.includes('boca') || itemName.includes('river')));
+          } else if (filter === 'Internacionales') {
+            // Real Madrid, Inter Miami, Francia son Internacionales
+            const itemName = (item.querySelector('h3')?.innerText || '').toLowerCase();
+            show = (category === 'Internacionales') || 
+                   (category === 'Clubes' && (itemName.includes('real') || itemName.includes('inter miami')));
+          }
+
+          if (show) {
+            item.classList.remove('hidden');
+            visibleCount++;
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+
+        // Mostrar u ocultar mensaje vacío
+        if (noProductsMsg) {
+          if (visibleCount === 0) {
+            noProductsMsg.classList.remove('hidden');
+          } else {
+            noProductsMsg.classList.add('hidden');
+          }
+        }
+      });
+    });
+  });
+</script>
