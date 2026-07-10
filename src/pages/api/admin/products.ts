@@ -1,7 +1,7 @@
 // src/pages/api/admin/products.ts
 import type { APIRoute } from 'astro';
-import { adminCatalogService } from '../../../modules/admin-catalog/admin-catalog.container';
-import { handleAdminApiError, validateCsrfHeader } from '../../../modules/admin-catalog/admin-catalog.helper';
+import { adminCatalogService } from '../../../modules/admin-catalog/admin-catalog.container.ts';
+import { handleAdminApiError, validateCsrfHeader } from '../../../modules/admin-catalog/admin-catalog.helper.ts';
 
 export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url);

@@ -8,7 +8,7 @@ import type {
   UpdateProductCommand,
   ProductFilter,
   PagedResult
-} from './admin-catalog.types';
+} from './admin-catalog.types.ts';
 import type mysql from 'mysql2/promise';
 
 export interface AdminCatalogRepository {

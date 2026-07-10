@@ -10,4 +10,9 @@ export default defineConfig({
     mode: 'standalone',
   }),
   integrations: [tailwind()],
+  vite: {
+    resolve: {
+      extensions: ['.ts', '.tsx', '.mts', '.js', '.mjs', '.json'],
+    },
+  },
 });

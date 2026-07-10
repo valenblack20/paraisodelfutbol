@@ -1,5 +1,5 @@
 // src/modules/admin-catalog/mysql-admin-catalog.repository.ts
-import type { AdminCatalogRepository } from './admin-catalog.repository';
+import type { AdminCatalogRepository } from './admin-catalog.repository.ts';
 import type {
   AdminCategory,
   AdminProduct,
@@ -11,8 +11,8 @@ import type {
   PagedResult,
   AdminProductVariant,
   AdminProductImage
-} from './admin-catalog.types';
-import { VersionConflictError } from './admin-catalog.errors';
+} from './admin-catalog.types.ts';
+import { VersionConflictError } from './admin-catalog.errors.ts';
 import type mysql from 'mysql2/promise';
 
 export class MySqlAdminCatalogRepository implements AdminCatalogRepository {

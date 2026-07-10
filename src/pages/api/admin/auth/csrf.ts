@@ -1,6 +1,6 @@
 // src/pages/api/admin/auth/csrf.ts
 import type { APIRoute } from 'astro';
-import { authService } from '../../../../modules/auth/auth.container';
+import { authService } from '../../../../modules/auth/auth.container.ts';
 
 export const GET: APIRoute = async (context) => {
   const adminContext = (context.locals as any).admin;

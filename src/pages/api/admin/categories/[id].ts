@@ -1,7 +1,7 @@
 // src/pages/api/admin/categories/[id].ts
 import type { APIRoute } from 'astro';
-import { adminCatalogService } from '../../../../modules/admin-catalog/admin-catalog.container';
-import { handleAdminApiError, validateCsrfHeader } from '../../../../modules/admin-catalog/admin-catalog.helper';
+import { adminCatalogService } from '../../../../modules/admin-catalog/admin-catalog.container.ts';
+import { handleAdminApiError, validateCsrfHeader } from '../../../../modules/admin-catalog/admin-catalog.helper.ts';
 
 export const PUT: APIRoute = async (context) => {
   const adminContext = (context.locals as any).admin;

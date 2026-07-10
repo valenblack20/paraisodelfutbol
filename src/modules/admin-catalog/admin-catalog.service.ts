@@ -1,16 +1,16 @@
 // src/modules/admin-catalog/admin-catalog.service.ts
-import type { AdminCatalogRepository } from './admin-catalog.repository';
+import type { AdminCatalogRepository } from './admin-catalog.repository.ts';
 import { 
   CategoryInputSchema, 
   CreateProductInputSchema, 
   UpdateProductInputSchema 
-} from './admin-catalog.schemas';
+} from './admin-catalog.schemas.ts';
 import { 
   ValidationError, 
   NotFoundError, 
   ConflictError, 
   DatabaseUnavailableError 
-} from './admin-catalog.errors';
+} from './admin-catalog.errors.ts';
 import type { 
   AdminCategory, 
   AdminProduct, 
@@ -20,7 +20,7 @@ import type {
   UpdateProductCommand, 
   ProductFilter, 
   PagedResult 
-} from './admin-catalog.types';
+} from './admin-catalog.types.ts';
 
 export class AdminCatalogService {
   private repository: AdminCatalogRepository;
