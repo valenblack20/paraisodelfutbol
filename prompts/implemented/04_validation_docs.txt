@@ -1,0 +1,108 @@
+PROMPT 4/4 — VALIDACIÓN FINAL Y DOCUMENTACIÓN DE LA FASE 1
+
+Repositorio:
+https://github.com/valenblack20/paraisodelfutbol
+
+Objetivo:
+Cerrar y verificar la Fase 1 sin agregar nuevas funcionalidades.
+
+No agregar:
+- autenticación;
+- CRUD administrativo;
+- pagos;
+- pedidos;
+- subida de imágenes;
+- migraciones del esquema;
+- rediseños.
+
+Realizar:
+
+1. Auditoría final del árbol:
+   - confirmar que páginas Astro no ejecutan raw SQL;
+   - confirmar que no quedan imports activos de src/lib/db.js;
+   - confirmar que no existe fallback automático a mocks;
+   - confirmar que no hay SELECT *;
+   - confirmar que no hay credenciales PUBLIC_;
+   - confirmar que .env no está trackeado;
+   - confirmar que /admin no es utilizable en producción sin autenticación.
+
+2. Revisar secretos:
+   - buscar passwords, connection strings y valores de .env;
+   - si hay secretos versionados, retirarlos y reportar rotación;
+   - no imprimirlos en el informe.
+
+3. Actualizar README.md con:
+   - propósito del proyecto;
+   - stack;
+   - arquitectura:
+     Astro page -> ProductService -> ProductRepository -> MySQL;
+   - requisitos locales;
+   - uso de .env.example;
+   - npm ci;
+   - npm run dev;
+   - npm run check;
+   - npm run build;
+   - npm start;
+   - endpoints health;
+   - dominio oficial;
+   - requerimiento de Node SSR;
+   - GitHub Pages ya no sirve como runtime productivo.
+
+4. Crear docs/architecture.md:
+   - responsabilidades de page, service, repository e infrastructure;
+   - dirección de dependencias;
+   - reglas para futuros módulos.
+
+5. Crear docs/deployment.md:
+   - versión de Node soportada;
+   - runtime Node persistente;
+   - acceso de red a MySQL;
+   - variables requeridas;
+   - HTTPS;
+   - build y start reales;
+   - health checks;
+   - incompatibilidad con hosting puramente estático.
+
+6. Ejecutar:
+   - npm ci
+   - npm run check
+   - npm run build
+   - iniciar build standalone
+   - probar:
+     /api/health
+     /api/health/database
+     /productos
+
+7. Verificar:
+   - precios correctos;
+   - descripción null no rompe;
+   - imágenes locales funcionan;
+   - carrito funciona;
+   - filtros funcionan;
+   - no hay overflow nuevo;
+   - admin bloqueado en producción;
+   - no hay mocks al fallar DB.
+
+Entregar informe final con:
+
+1. Auditoría inicial resumida.
+2. Arquitectura final.
+3. Esquema real detectado.
+4. Archivos creados.
+5. Archivos modificados.
+6. Archivos retirados/deprecados.
+7. Variables necesarias.
+8. Resultado MySQL.
+9. Resultado health app.
+10. Resultado health DB.
+11. Resultado catálogo.
+12. Resultado protección admin.
+13. Resultado npm ci.
+14. Resultado check.
+15. Resultado build.
+16. Resultado start.
+17. Hallazgos de seguridad.
+18. Deuda técnica restante.
+19. Recomendación concreta para Fase 2.
+
+No afirmar éxito de conexión si no fue probado realmente.

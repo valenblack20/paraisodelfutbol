@@ -1,0 +1,97 @@
+PROMPT 3/4 — CATÁLOGO SSR, HEALTH CHECKS Y BLOQUEO TEMPORAL DEL ADMIN
+
+Continuá sobre:
+https://github.com/valenblack20/paraisodelfutbol
+
+Objetivo:
+Conectar el catálogo público al ProductService, agregar health checks y evitar que el admin inseguro quede expuesto.
+
+Implementá:
+
+1. Refactorizar src/pages/productos.astro:
+   - quitar import de src/lib/db.js;
+   - quitar SQL directo;
+   - quitar export const prerender = true;
+   - usar productService.getCatalog();
+   - renderizar en cada request;
+   - preservar diseño actual;
+   - preservar grid actual;
+   - preservar data-* del carrito;
+   - preservar evento add-to-cart;
+   - preservar textos en español.
+
+2. Manejo de error:
+   Si MySQL falla:
+   - no mostrar productos falsos;
+   - no mostrar stack ni SQL;
+   - mantener Layout, Navbar y Footer;
+   - mostrar:
+     "No pudimos cargar el catálogo"
+     "Estamos teniendo una dificultad temporal para consultar nuestros productos. Intentá nuevamente en unos minutos."
+   - botón "Reintentar";
+   - mantener WhatsApp disponible.
+
+3. Crear src/infrastructure/database/database-health.ts
+   usando SELECT 1 AS healthy.
+
+4. Crear endpoints:
+   - src/pages/api/health/index.ts
+   - src/pages/api/health/database.ts
+
+   App health 200:
+   {
+     "status": "ok",
+     "service": "paraisofutbol-web",
+     "timestamp": "..."
+   }
+
+   DB health:
+   - 200 si disponible;
+   - 503 si no disponible;
+   - Cache-Control: no-store;
+   - no exponer host, DB name, usuario ni error crudo.
+
+5. Seguridad temporal del admin:
+   - remover link /admin del Navbar;
+   - remover link /admin del Footer;
+   - en producción, /admin no debe permitir operaciones;
+   - solo permitirlo en desarrollo si ENABLE_UNSAFE_ADMIN=true;
+   - si no, devolver 404 o pantalla no disponible;
+   - no implementar login todavía;
+   - no confiar en ocultar el link como seguridad.
+
+6. Correcciones pequeñas en CamisetaCard.astro, sin rediseñar:
+   - reemplazar `object-${imageFit}` por mapping de clases completas;
+   - usar alt={nombre};
+   - quitar tabindex del contenedor no interactivo;
+   - reemplazar placeholder remoto por placeholder local;
+   - conservar featured, badge, imageFit y compatibilidad del carrito.
+
+7. Corregir referencias públicas:
+   - dominio oficial https://paraisofutbol.com;
+   - quitar referencias productivas a paraisodelfutbol.ar;
+   - quitar supuestos de base path GitHub Pages.
+
+Validación:
+- catálogo carga productos reales desde MySQL;
+- health app devuelve 200;
+- health DB devuelve 200;
+- con conexión inválida temporal, DB health devuelve 503;
+- con DB caída, catálogo muestra error controlado;
+- no aparecen mocks;
+- carrito sigue funcionando;
+- filtros siguen funcionando;
+- /admin queda bloqueado en producción;
+- npm run check;
+- npm run build.
+
+Restaurar el .env válido después de la prueba.
+Nunca versionar ni mostrar secretos.
+
+Informe final:
+- resultado catálogo;
+- resultados health;
+- protección de admin;
+- compatibilidad de carrito;
+- resultados check/build;
+- riesgos pendientes.

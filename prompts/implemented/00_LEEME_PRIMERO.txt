@@ -1,0 +1,27 @@
+PARAISO FUTBOL - FASE 1 PARA ANTIGRAVITY
+
+Objetivo:
+Transformar el proyecto Astro actual en una aplicación SSR con Node y MySQL real,
+sin rediseñar la interfaz ni construir todavía el backoffice completo.
+
+Repositorio:
+https://github.com/valenblack20/paraisodelfutbol
+
+Dominio oficial:
+https://paraisofutbol.com
+
+ORDEN DE EJECUCIÓN
+
+1. Ejecutar 01_ssr_env_mysql.txt
+2. Ejecutar 02_product_architecture.txt
+3. Ejecutar 03_catalog_health_admin.txt
+4. Ejecutar 04_validation_docs.txt
+
+IMPORTANTE
+
+- Ejecutar los prompts en orden.
+- No mezclar fases.
+- Después de cada prompt, revisar el diff y confirmar que el build sigue funcionando.
+- Nunca copiar ni mostrar secretos del archivo .env.
+- No rediseñar las cards durante esta fase.
+- No crear autenticación, pagos, pedidos ni subida de imágenes todavía.

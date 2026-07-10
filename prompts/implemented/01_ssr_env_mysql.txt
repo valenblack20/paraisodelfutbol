@@ -1,0 +1,119 @@
+PROMPT 1/4 — MIGRACIÓN A ASTRO SSR + CONFIGURACIÓN MYSQL
+
+Trabajá directamente sobre este repositorio:
+https://github.com/valenblack20/paraisodelfutbol
+
+Dominio oficial:
+https://paraisofutbol.com
+
+Contexto:
+- Astro + TypeScript + Tailwind + mysql2.
+- La base MySQL online ya existe.
+- Las credenciales válidas ya están configuradas en .env.
+- No mostrar, imprimir, copiar ni versionar secretos.
+- Actualmente el proyecto todavía conserva configuración estática de GitHub Pages y un mock de base de datos.
+
+Objetivo de este prompt:
+Preparar la aplicación para ejecutarse como Astro SSR sobre Node y conectarse de forma segura a MySQL.
+
+Implementá:
+
+1. Auditoría breve antes de editar:
+   - package.json
+   - package-lock.json
+   - astro.config.mjs
+   - src/lib/db.js
+   - .gitignore
+   - .env.example
+   - workflows de GitHub Actions
+   - referencias a GitHub Pages
+   - usos de process.env, import.meta.env, prerender y mockCamisetas
+
+2. Migración SSR:
+   - usar @astrojs/node compatible con la versión instalada;
+   - configurar output: 'server';
+   - usar adaptador Node en modo standalone;
+   - configurar site: 'https://paraisofutbol.com';
+   - eliminar base de GitHub Pages;
+   - eliminar comentarios y constantes obsoletas de GitHub Pages;
+   - conservar Tailwind;
+   - no actualizar Astro de versión mayor salvo incompatibilidad real.
+
+3. package.json:
+   - mantener package-lock determinístico;
+   - agregar engines para Node compatible;
+   - confirmar scripts:
+     dev, check, build y start;
+   - validar el path real del entrypoint generado por el adapter antes de definir start.
+
+4. Configuración de entorno:
+   Crear src/infrastructure/config/env.ts.
+   Debe leer y validar:
+   - DB_HOST
+   - DB_PORT
+   - DB_USER
+   - DB_PASSWORD
+   - DB_NAME
+   - DB_CONNECTION_LIMIT
+   - DB_SSL
+   - NODE_ENV
+   - PUBLIC_SITE_URL
+   - PUBLIC_WHATSAPP_NUMBER
+   - ENABLE_UNSAFE_ADMIN
+
+   Requisitos:
+   - usar import.meta.env;
+   - tipado estricto;
+   - parsear números y booleanos;
+   - errores claros;
+   - nunca loguear password ni connection string;
+   - credenciales de DB nunca llevan prefijo PUBLIC_.
+
+5. Crear o actualizar .env.example con placeholders vacíos.
+6. Asegurar que .gitignore excluya:
+   .env
+   .env.local
+   .env.production
+   .env.*.local
+
+7. Crear src/infrastructure/database/mysql.ts:
+   - usar mysql2/promise;
+   - pool singleton lazy;
+   - waitForConnections;
+   - connectionLimit configurable;
+   - charset utf8mb4;
+   - decimalNumbers true;
+   - timezone UTC;
+   - SSL opcional y seguro;
+   - exportar getDatabasePool();
+   - opcional closeDatabasePool();
+   - no crear un pool por request.
+
+8. Eliminar el fallback automático a mock:
+   - no usar mockCamisetas ante errores;
+   - no fingir INSERT/UPDATE/DELETE exitosos;
+   - no esconder errores de conexión;
+   - preferentemente retirar src/lib/db.js o dejarlo deprecado sin usos.
+
+No tocar todavía:
+- diseño de cards;
+- catálogo visual;
+- autenticación;
+- pagos;
+- pedidos;
+- subida de imágenes;
+- modelo definitivo de tablas.
+
+Validación obligatoria:
+- npm ci
+- npm run check
+- npm run build
+- confirmar que el servidor standalone inicia.
+
+Informe final:
+- archivos modificados;
+- configuración SSR resultante;
+- variables requeridas;
+- resultado de check/build/start;
+- riesgos detectados;
+- no mostrar secretos.

@@ -1,0 +1,105 @@
+PROMPT 2/4 — ARQUITECTURA DE PRODUCTOS SOBRE MYSQL REAL
+
+Continuá sobre el repositorio ya migrado a Astro SSR:
+https://github.com/valenblack20/paraisodelfutbol
+
+No rediseñes la interfaz.
+
+Objetivo:
+Eliminar SQL de las páginas y crear una arquitectura mínima:
+Astro page -> ProductService -> ProductRepository -> MySQL.
+
+Antes de editar:
+
+1. Usando el .env existente, inspeccioná de forma segura la base online con consultas de solo lectura:
+   - SHOW TABLES;
+   - DESCRIBE la tabla de productos;
+   - SHOW CREATE TABLE de la tabla correspondiente.
+
+2. No muestres:
+   - host;
+   - usuario;
+   - password;
+   - nombre privado de infraestructura;
+   - connection string.
+
+3. No inventes columnas.
+
+Implementá:
+
+1. Crear src/modules/products/product.types.ts
+   con un modelo de dominio basado únicamente en columnas reales.
+
+   Debe cubrir, si existen:
+   - id
+   - codigo_foto
+   - nombre
+   - descripcion
+   - precio_minorista
+   - precio_mayorista
+   - categoria
+   - stock
+
+   En TypeScript usar camelCase.
+
+2. Crear src/modules/products/product-row.types.ts
+   con el shape exacto de la fila MySQL.
+
+3. Crear src/modules/products/product.mapper.ts
+   para:
+   - snake_case -> camelCase;
+   - DECIMAL -> number;
+   - nullables;
+   - validación de datos críticos;
+   - sin any.
+
+4. Crear contrato ProductRepository:
+   - findCatalogProducts(): Promise<Product[]>
+   - findById(id: number): Promise<Product | null>
+
+5. Crear MySqlProductRepository:
+   - SELECT explícito, nunca SELECT *;
+   - execute y parámetros;
+   - ORDER BY determinístico;
+   - sin lógica visual;
+   - sin inferir categorías desde nombres;
+   - sin modificar stock.
+
+6. Crear ProductService:
+   - getCatalog()
+   - getProductById(id)
+
+7. Crear product.container.ts para componer:
+   MySqlProductRepository + ProductService.
+
+8. Crear docs/database-current-state.md con:
+   - tablas relevantes detectadas;
+   - columnas y tipos;
+   - PK e índices;
+   - campos usados por frontend;
+   - deuda técnica;
+   - recomendaciones futuras:
+     slug, sku, published, featured, wholesale_minimum,
+     categories, product_images, product_sizes.
+   - no ejecutar migraciones todavía.
+
+No tocar:
+- admin;
+- autenticación;
+- pagos;
+- pedidos;
+- diseño visual.
+
+Validación:
+- npm run check
+- npm run build
+- prueba real de lectura contra MySQL
+- confirmar que ningún raw SQL quedó en páginas Astro.
+
+Informe final:
+- esquema real detectado;
+- arquitectura creada;
+- archivos nuevos;
+- resultado de conexión;
+- resultado de check/build;
+- deuda técnica pendiente.

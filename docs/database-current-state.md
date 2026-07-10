@@ -4,7 +4,7 @@ Este documento detalla el estado actual, estructura de tablas y consideraciones 
 
 ## Tablas Relevantes Detectadas
 
-Al inspeccionar de forma segura la base de datos online actual (`u462690221_paraiso_futbol` en el host `31.97.208.87`), se constató que:
+Al inspeccionar de forma segura la base de datos online configurada, se constató que:
 * **Estado:** La base de datos está vacía (0 tablas encontradas).
 * **Definición de Referencia:** El script `db/schema.sql` contiene la estructura oficial para crear la tabla de `camisetas` en las fases subsiguientes.
 
