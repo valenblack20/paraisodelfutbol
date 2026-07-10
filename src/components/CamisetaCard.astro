@@ -2,6 +2,7 @@
 // CamisetaCard.astro
 interface Props {
   id: number;
+  slug: string;
   codigo_foto?: string;
   imagePath?: string;
   nombre: string;
@@ -17,13 +18,13 @@ interface Props {
 
 const { 
   id, 
+  slug,
   codigo_foto, 
   imagePath,
   nombre, 
   descripcion, 
   precio_minorista, 
   precio_mayorista, 
-  categoria, 
   stock,
   featured = false,
   badge,
@@ -45,38 +46,32 @@ const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
 ---
 
 <div 
-  class={`product-card flex flex-col justify-between w-full h-full bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] rounded-[var(--radius-card)] overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 focus-within:ring-2 focus-within:ring-[var(--color-gold)] transition-all duration-300 group ${featured ? 'border-[var(--color-gold)] ring-1 ring-[var(--color-gold)]/30' : ''}`}
+  class="group product-card bg-neutral-900/40 rounded-2xl border border-[var(--color-border)] overflow-hidden flex flex-col h-full transition-all duration-300 hover:border-neutral-700 hover:shadow-xl hover:shadow-black/20"
   data-id={id}
+  data-slug={slug}
   data-nombre={nombre}
   data-precio-minorista={precio_minorista}
   data-precio-mayorista={precio_mayorista}
   data-codigo-foto={codigo_foto}
-  data-categoria={categoria}
 >
-  
   <!-- Contenedor Foto con destello radial detrás -->
-  <div class="relative aspect-[4/5] w-full bg-[#0a0a0a] overflow-hidden flex items-center justify-center p-6 border-b border-[var(--color-border)]">
+  <a href={`/productos/${slug}`} class="relative aspect-[4/5] w-full bg-[#0a0a0a] overflow-hidden flex items-center justify-center p-6 border-b border-[var(--color-border)] group/img">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.02)_0%,_transparent_70%)] pointer-events-none"></div>
     
     <img 
       src={imageSrc}
       alt={nombre}
-      class={`w-full h-full max-h-full ${fitClass} group-hover:scale-[1.03] transition-transform duration-500`}
+      class={`w-full h-full max-h-full ${fitClass} group-hover/img:scale-[1.02] transition-transform duration-500`}
       loading="lazy"
       onerror="this.onerror=null; this.src='/placeholder.svg';"
     />
     
     <!-- Tag Categoría / Personalizado -->
-    <span class="absolute top-4 left-4 bg-zinc-900/90 text-white text-[11px] font-bold px-3 py-1 rounded-full border border-[var(--color-border)] uppercase tracking-wider select-none">
-      {badge || categoria}
-    </span>
-
-    <!-- Indicador Stock -->
-    {stock <= 0 ? (
-      <span class="absolute top-4 right-4 bg-red-950/90 text-red-400 text-[11px] font-bold px-3 py-1 rounded-full border border-red-800/40 uppercase tracking-wider select-none">
-        Sin Stock
+    {badge ? (
+      <span class="absolute top-4 left-4 bg-celeste-500 text-neutral-950 text-[10px] font-extrabold px-2.5 py-0.5 rounded uppercase tracking-wider shadow select-none">
+        {badge}
       </span>
-    ) : stock < 5 ? (
+    ) : (stock > 0 && 10 >= stock) ? (
       <span class="absolute top-4 right-4 bg-amber-950/90 text-amber-400 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-800/40 uppercase tracking-wider select-none">
         Últimas {stock}
       </span>
@@ -87,7 +82,7 @@ const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
         Destacada
       </span>
     )}
-  </div>
+  </a>
 
   <!-- Detalles de la Camiseta -->
   <div class="p-5 flex flex-col flex-grow justify-between">
@@ -101,7 +96,7 @@ const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
 
       <!-- Título: reserva espacio vertical para 2 líneas -->
       <h3 class="text-base font-bold text-[var(--color-text)] group-hover:text-[var(--color-gold)] transition-colors line-clamp-2 min-h-[3rem] flex items-center leading-snug">
-        {nombre}
+        <a href={`/productos/${slug}`} class="hover:underline">{nombre}</a>
       </h3>
 
       <!-- Descripción breve: max 2 líneas -->
@@ -119,77 +114,24 @@ const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
             {formatPrice(precio_minorista)}
           </span>
         </div>
-        <p class="text-xs text-[var(--color-gold)] font-medium">
-          Mayorista: <strong class="font-bold">{formatPrice(precio_mayorista)}</strong> <span class="text-zinc-500">(desde 6 u.)</span>
-        </p>
+        {precio_mayorista > 0 && (
+          <p class="text-xs text-[var(--color-gold)] font-medium">
+            Mayorista: <strong class="font-bold">{formatPrice(precio_mayorista)}</strong> <span class="text-zinc-500">(desde 6 u.)</span>
+          </p>
+        )}
       </div>
 
-      <!-- Botón Agregar -->
-      <button 
-        class="w-full bg-[var(--color-gold)] text-black font-extrabold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed add-to-cart-btn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
-        disabled={stock <= 0}
+      <!-- Botón Ver Producto -->
+      <a 
+        href={`/productos/${slug}`}
+        class="w-full bg-[var(--color-gold)] text-black font-extrabold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:bg-gold-400 text-center active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
       >
-        {stock <= 0 ? (
-          <span>Sin stock</span>
-        ) : (
-          <>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            <span>Agregar al Carrito</span>
-          </>
-        )}
-      </button>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span>Ver Producto</span>
+      </a>
     </div>
   </div>
 </div>
-
-<script>
-  // Añadir eventos a los botones de agregar al carrito de forma idempotente con View Transitions
-  document.addEventListener('astro:page-load', () => {
-    const cards = document.querySelectorAll('.product-card');
-    
-    cards.forEach(card => {
-      const btn = card.querySelector('.add-to-cart-btn');
-      if (!btn || btn.hasAttribute('data-listener-active')) return;
-
-      btn.setAttribute('data-listener-active', 'true');
-      btn.addEventListener('click', () => {
-        const id = card.getAttribute('data-id');
-        const nombre = card.getAttribute('data-nombre');
-        const precioMinorista = parseFloat(card.getAttribute('data-precio-minorista') || '0');
-        const precioMayorista = parseFloat(card.getAttribute('data-precio-mayorista') || '0');
-        const codigoFoto = card.getAttribute('data-codigo-foto');
-
-        const item = {
-          id,
-          nombre,
-          precioMinorista,
-          precioMayorista,
-          codigoFoto,
-          cantidad: 1
-        };
-
-        // Disparar evento global para añadir al carrito
-        document.dispatchEvent(new CustomEvent('add-to-cart', { detail: item }));
-        
-        // Animación breve de feedback
-        const oldContent = btn.innerHTML;
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          ¡Agregado!
-        `;
-        btn.classList.remove('bg-[var(--color-gold)]', 'text-black');
-        btn.classList.add('bg-zinc-700', 'text-white');
-
-        setTimeout(() => {
-          btn.innerHTML = oldContent;
-          btn.classList.remove('bg-zinc-700', 'text-white');
-          btn.classList.add('bg-[var(--color-gold)]', 'text-black');
-        }, 1200);
-      });
-    });
-  });
-</script>

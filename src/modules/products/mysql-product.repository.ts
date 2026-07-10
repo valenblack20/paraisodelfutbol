@@ -1,7 +1,7 @@
 import type { Pool } from 'mysql2/promise';
 import type { ProductRepository } from './product.repository';
-import type { Product } from './product.types';
-import type { ProductRow } from './product-row.types';
+import type { ProductSummary, ProductDetail } from './product.types';
+import type { ProductRow, ProductImageRow, ProductVariantRow } from './product-row.types';
 import { ProductMapper } from './product.mapper';
 
 export class MySqlProductRepository implements ProductRepository {
@@ -31,7 +31,7 @@ export class MySqlProductRepository implements ProductRepository {
     `;
   }
 
-  public async findCatalogProducts(): Promise<Product[]> {
+  public async findCatalogProducts(): Promise<ProductSummary[]> {
     const sql = `
       SELECT ${this.getSelectFields()}
       FROM products p
@@ -44,10 +44,10 @@ export class MySqlProductRepository implements ProductRepository {
         p.id DESC
     `;
     const [rows] = await this.pool.execute<ProductRow[]>(sql);
-    return ProductMapper.toDomainList(rows);
+    return ProductMapper.toSummaryList(rows);
   }
 
-  public async findById(id: number): Promise<Product | null> {
+  public async findById(id: number): Promise<ProductDetail | null> {
     const sql = `
       SELECT ${this.getSelectFields()}
       FROM products p
@@ -59,21 +59,63 @@ export class MySqlProductRepository implements ProductRepository {
     if (rows.length === 0) {
       return null;
     }
-    return ProductMapper.toDomain(rows[0]);
+
+    const row = rows[0];
+
+    // Load images
+    const [imageRows] = await this.pool.execute<ProductImageRow[]>(
+      `SELECT id, product_id, image_path, alt_text, display_order, is_primary 
+       FROM product_images 
+       WHERE product_id = ? 
+       ORDER BY display_order ASC, id ASC`,
+      [row.id]
+    );
+
+    // Load active variants
+    const [variantRows] = await this.pool.execute<ProductVariantRow[]>(
+      `SELECT id, product_id, size_code, sku, stock, active, display_order 
+       FROM product_variants 
+       WHERE product_id = ? AND active = 1 
+       ORDER BY display_order ASC, size_code ASC`,
+      [row.id]
+    );
+
+    return ProductMapper.toDetail(row, imageRows, variantRows);
   }
 
-  public async findBySlug(slug: string): Promise<Product | null> {
+  public async findPublicBySlug(slug: string): Promise<ProductDetail | null> {
     const sql = `
       SELECT ${this.getSelectFields()}
       FROM products p
       INNER JOIN categories c ON p.category_id = c.id
-      WHERE p.slug = ?
+      WHERE p.slug = ? AND p.published = 1 AND c.active = 1
       LIMIT 1
     `;
     const [rows] = await this.pool.execute<ProductRow[]>(sql, [slug]);
     if (rows.length === 0) {
       return null;
     }
-    return ProductMapper.toDomain(rows[0]);
+
+    const row = rows[0];
+
+    // Load images
+    const [imageRows] = await this.pool.execute<ProductImageRow[]>(
+      `SELECT id, product_id, image_path, alt_text, display_order, is_primary 
+       FROM product_images 
+       WHERE product_id = ? 
+       ORDER BY display_order ASC, id ASC`,
+      [row.id]
+    );
+
+    // Load active variants
+    const [variantRows] = await this.pool.execute<ProductVariantRow[]>(
+      `SELECT id, product_id, size_code, sku, stock, active, display_order 
+       FROM product_variants 
+       WHERE product_id = ? AND active = 1 
+       ORDER BY display_order ASC, size_code ASC`,
+      [row.id]
+    );
+
+    return ProductMapper.toDetail(row, imageRows, variantRows);
   }
 }

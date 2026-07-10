@@ -92,40 +92,68 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
     badgeEl = document.getElementById('cart-badge');
   }
 
-  // Cargar carrito desde localStorage
+  // Cargar carrito desde localStorage con soporte para versionado paraiso-cart-v2
   function loadCart() {
-    const saved = localStorage.getItem('paraiso_cart');
+    const saved = localStorage.getItem('paraiso-cart-v2');
     cart = saved ? JSON.parse(saved) : [];
     updateCartUI();
   }
 
   // Guardar carrito en localStorage
   function saveCart() {
-    localStorage.setItem('paraiso_cart', JSON.stringify(cart));
+    localStorage.setItem('paraiso-cart-v2', JSON.stringify(cart));
     updateCartUI();
   }
 
-  // Comprobar si califica para compra mayorista (6 o más camisetas en total)
-  function isWholesale() {
-    const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
-    return totalQty >= 6;
+  // Lógica de precios centralizada por producto
+  function calculatePricing() {
+    const qtyByProduct = {};
+    cart.forEach(item => {
+      qtyByProduct[item.productId] = (qtyByProduct[item.productId] || 0) + item.cantidad;
+    });
+
+    let total = 0;
+    let retailTotal = 0;
+    let savings = 0;
+
+    const itemsWithPrices = cart.map(item => {
+      const totalProductQty = qtyByProduct[item.productId] || 0;
+      const qualifies = item.wholesalePrice !== null && totalProductQty >= item.wholesaleMinimum;
+      const unitPrice = qualifies ? item.wholesalePrice : item.retailPrice;
+      const lineSubtotal = unitPrice * item.cantidad;
+      const lineRetailSubtotal = item.retailPrice * item.cantidad;
+
+      total += lineSubtotal;
+      retailTotal += lineRetailSubtotal;
+
+      return {
+        ...item,
+        unitPrice,
+        lineSubtotal,
+        qualifies,
+        totalProductQty
+      };
+    });
+
+    savings = retailTotal - total;
+
+    return {
+      items: itemsWithPrices,
+      total,
+      retailTotal,
+      savings,
+      qtyByProduct
+    };
   }
 
   // Actualizar la interfaz del carrito
   function updateCartUI() {
     if (!container) return;
 
-    // Calcular totales
+    const pricing = calculatePricing();
     const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
-    const wholesaleActive = totalQty >= 6;
-    
-    let totalPrice = 0;
-    cart.forEach(item => {
-      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
-      totalPrice += price * item.cantidad;
-    });
 
-    // Actualizar badges e indicadores
+    // Actualizar badges
     if (badgeEl) {
       badgeEl.innerText = totalQty;
       if (totalQty > 0) {
@@ -138,34 +166,64 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
     }
 
     if (totalQtyEl) totalQtyEl.innerText = totalQty;
+    
     if (totalPriceEl) {
       totalPriceEl.innerText = new Intl.NumberFormat('es-AR', {
         style: 'currency',
         currency: 'ARS',
         minimumFractionDigits: 0
-      }).format(totalPrice);
+      }).format(pricing.total);
     }
 
-    // Configurar el indicador de compra mayorista
+    // Configurar el indicador de compra mayorista y ahorro
     if (indicatorEl) {
       if (totalQty > 0) {
         indicatorEl.classList.remove('hidden');
-        if (wholesaleActive) {
-          indicatorEl.innerHTML = `
+        
+        // Construir mensajes por producto que no califica
+        let helperHtml = '';
+        const uniqueProductIds = [...new Set(cart.map(i => i.productId))];
+        
+        uniqueProductIds.forEach(pid => {
+          const itemSample = cart.find(i => i.productId === pid);
+          if (!itemSample) return;
+          const totalQtyForProd = pricing.qtyByProduct[pid] || 0;
+          
+          if (itemSample.wholesalePrice !== null) {
+            if (totalQtyForProd < itemSample.wholesaleMinimum) {
+              const missing = itemSample.wholesaleMinimum - totalQtyForProd;
+              helperHtml += `
+                <div class="text-[10px] text-neutral-400 mt-1 flex justify-between">
+                  <span>• *${itemSample.name}*: faltan <strong class="text-celeste-400">${missing} u.</strong></span>
+                  <span class="text-neutral-500">para precio mayorista</span>
+                </div>
+              `;
+            }
+          }
+        });
+
+        let summaryHtml = '';
+        if (pricing.savings > 0) {
+          summaryHtml += `
             <div class="flex items-center justify-between text-xs text-gold-400 font-bold">
-              <span>🔥 ¡PRECIO MAYORISTA ACTIVADO!</span>
-              <span>Ahorro aplicado (+6 u.)</span>
+              <span>🔥 AHORRO MAYORISTA APLICADO:</span>
+              <span>-${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(pricing.savings)}</span>
             </div>
           `;
         } else {
-          const faltantes = 6 - totalQty;
-          indicatorEl.innerHTML = `
-            <div class="flex items-center justify-between text-xs text-neutral-400">
-              <span>Agrega <strong class="text-celeste-400">${faltantes}</strong> más para precio mayorista</span>
-              <span class="text-[10px] text-neutral-500">Min. 6 unidades</span>
+          summaryHtml += `
+            <div class="text-xs text-neutral-300 font-semibold">
+              Precios minoristas aplicados.
             </div>
           `;
         }
+
+        indicatorEl.innerHTML = `
+          <div class="space-y-1">
+            ${summaryHtml}
+            ${helperHtml}
+          </div>
+        `;
       } else {
         indicatorEl.classList.add('hidden');
       }
@@ -189,28 +247,34 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
       return;
     }
 
-    container.innerHTML = cart.map(item => {
-      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
+    container.innerHTML = pricing.items.map(item => {
       const formattedItemPrice = new Intl.NumberFormat('es-AR', {
         style: 'currency',
         currency: 'ARS',
         minimumFractionDigits: 0
-      }).format(price * item.cantidad);
+      }).format(item.lineSubtotal);
+
+      const priceLabel = item.qualifies ? 'Mayorista' : 'Minorista';
+      const badgeColor = item.qualifies ? 'text-gold-400 bg-gold-500/10 border-gold-500/20' : 'text-neutral-400 bg-neutral-900 border-neutral-800';
 
       return `
         <div class="flex items-center space-x-4 bg-neutral-900/50 p-3 rounded-lg border border-neutral-800/80">
           <div class="h-16 w-16 bg-neutral-950 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-850">
             <img 
-              src="/Imagenes/${item.codigoFoto}.webp" 
-              alt="${item.nombre}" 
-              class="h-full w-full object-cover" 
-              onerror="this.onerror=null; this.src='https://placehold.co/100x100/0a0a0a/74ACDF?text=Jersey';"
+              src="${item.imagePath}" 
+              alt="${item.name}" 
+              class="h-full w-full object-contain" 
+              onerror="this.onerror=null; this.src='/placeholder.svg';"
             />
           </div>
           <div class="flex-grow min-w-0">
-            <h4 class="text-xs font-bold text-neutral-200 truncate">${item.nombre}</h4>
-            <p class="text-[10px] text-neutral-400 mt-0.5">
-              ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price)} c/u
+            <h4 class="text-xs font-bold text-neutral-200 truncate">${item.name}</h4>
+            <div class="flex items-center space-x-2 mt-0.5">
+              <span class="text-[10px] text-neutral-400">Talle: <strong class="text-gold-400 font-extrabold">${item.sizeCode}</strong></span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded border ${badgeColor} font-semibold">${priceLabel}</span>
+            </div>
+            <p class="text-[10px] text-neutral-400 mt-1">
+              ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(item.unitPrice)} c/u
             </p>
             <div class="flex items-center justify-between mt-2">
               <!-- Selectores de cantidad -->
@@ -242,14 +306,22 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
     });
   }
 
-  // Modificar cantidad de un ítem
+  // Modificar cantidad de un ítem respetando el stock de variante
   function updateQty(id, delta) {
     const item = cart.find(i => i.id === id);
     if (!item) return;
 
-    item.cantidad += delta;
-    if (item.cantidad <= 0) {
+    const newQty = item.cantidad + delta;
+    if (newQty <= 0) {
       cart = cart.filter(i => i.id !== id);
+    } else {
+      // Evitar que la cantidad supere el stock de la variante
+      const maxLimit = item.variantStock !== undefined ? item.variantStock : 99;
+      if (newQty <= maxLimit) {
+        item.cantidad = newQty;
+      } else {
+        item.cantidad = maxLimit;
+      }
     }
     saveCart();
   }
@@ -275,22 +347,17 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
 
   // Enviar pedido a WhatsApp
   function checkout() {
+    const pricing = calculatePricing();
     const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
-    const wholesaleActive = totalQty >= 6;
     
-    let totalPrice = 0;
     let listText = '';
     
-    cart.forEach(item => {
-      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
-      const subtotal = price * item.cantidad;
-      totalPrice += subtotal;
-      
-      listText += `• *${item.nombre}* x${item.cantidad} _($${new Intl.NumberFormat('es-AR').format(price)} c/u)_\n`;
+    pricing.items.forEach(item => {
+      const tipoPrecio = item.qualifies ? 'Mayorista 🔥' : 'Minorista';
+      listText += `• *${item.name}* (Talle: ${item.sizeCode}) x${item.cantidad} _($${new Intl.NumberFormat('es-AR').format(item.unitPrice)} c/u - ${tipoPrecio})_\n`;
     });
 
-    const tipoCompra = wholesaleActive ? 'Mayorista 🔥' : 'Minorista';
-    const totalFormatted = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(totalPrice);
+    const totalFormatted = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(pricing.total);
     
     const message = 
 `⚽ *NUEVO PEDIDO - EL PARAÍSO DEL FÚTBOL* ⚽
@@ -299,7 +366,6 @@ Hola! Me gustaría encargar las siguientes camisetas:
 
 ${listText}
 ------------------------------------------
-🛍️ *Tipo de Compra:* ${tipoCompra}
 📦 *Cantidad total:* ${totalQty} productos
 💰 *Total del pedido:* ${totalFormatted}
 
@@ -308,7 +374,6 @@ _Quedo a la espera para coordinar el pago y envío!_`;
     const encodedText = encodeURIComponent(message);
     const url = `https://wa.me/${whatsappNumber}?text=${encodedText}`;
     
-    // Abrir enlace de WhatsApp en pestaña nueva
     window.open(url, '_blank');
   }
 
@@ -334,7 +399,9 @@ _Quedo a la espera para coordinar el pago y envío!_`;
       const existing = cart.find(i => i.id === newItem.id);
 
       if (existing) {
-        existing.cantidad += 1;
+        const potentialQty = existing.cantidad + newItem.cantidad;
+        const maxLimit = newItem.variantStock !== undefined ? newItem.variantStock : 99;
+        existing.cantidad = Math.min(potentialQty, maxLimit);
       } else {
         cart.push(newItem);
       }

@@ -1,0 +1,595 @@
+Work directly on:
+
+https://github.com/valenblack20/paraisodelfutbol
+
+Production domain:
+
+https://paraisofutbol.com
+
+All user-facing website text must remain in Spanish.
+
+CURRENT STATE
+
+- Astro SSR + Node standalone.
+- MySQL online.
+- Versioned SQL migrations and seeds.
+- Tables: categories, products, schema_migrations.
+- ProductService and MySqlProductRepository exist.
+- Public catalog reads real products.
+- Admin remains disabled in production and still uses localStorage in development.
+- Do not connect or redesign the admin in this phase.
+
+PHASE 3 GOAL
+
+Complete the public product model before building administration:
+
+1. add multiple product images;
+2. add size variants with stock per size;
+3. create a premium product detail page;
+4. make catalog cards link to product detail;
+5. add size selection before adding an item to cart;
+6. preserve current catalog design and SSR architecture.
+
+DO NOT implement:
+
+- authentication;
+- admin CRUD;
+- image uploads;
+- orders;
+- payments;
+- customers;
+- discounts;
+- reserved inventory;
+- external storage.
+
+==================================================
+1. AUDIT FIRST
+==================================================
+
+Inspect:
+
+- db/migrations
+- db/seeds
+- migration runner
+- Product types, mapper, repository and service
+- CamisetaCard.astro
+- Cart.astro
+- productos.astro
+- Layout metadata
+- existing public product images
+
+Confirm:
+
+- current migration status;
+- current five products;
+- current cart item structure;
+- actual local image files available.
+
+Do not expose environment values.
+
+Proceed after the audit.
+
+==================================================
+2. NEW MIGRATIONS
+==================================================
+
+Create new migrations only. Never edit applied migrations 001 or 002.
+
+Create:
+
+003_create_product_images.sql
+004_create_product_variants.sql
+
+TABLE product_images
+
+- id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+- product_id BIGINT UNSIGNED NOT NULL
+- image_path VARCHAR(500) NOT NULL
+- alt_text VARCHAR(250) NULL
+- display_order INT UNSIGNED NOT NULL DEFAULT 0
+- is_primary BOOLEAN NOT NULL DEFAULT FALSE
+- created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+Foreign key:
+
+- product_id -> products.id
+- ON DELETE CASCADE
+- ON UPDATE RESTRICT
+
+Constraints/indexes:
+
+- UNIQUE(product_id, image_path)
+- INDEX(product_id, display_order)
+- INDEX(product_id, is_primary)
+
+TABLE product_variants
+
+- id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+- product_id BIGINT UNSIGNED NOT NULL
+- size_code VARCHAR(20) NOT NULL
+- sku VARCHAR(100) NULL UNIQUE
+- stock INT UNSIGNED NOT NULL DEFAULT 0
+- active BOOLEAN NOT NULL DEFAULT TRUE
+- display_order INT UNSIGNED NOT NULL DEFAULT 0
+- created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+Foreign key:
+
+- product_id -> products.id
+- ON DELETE CASCADE
+- ON UPDATE RESTRICT
+
+Constraints/indexes:
+
+- UNIQUE(product_id, size_code)
+- CHECK stock >= 0 where supported
+- INDEX(product_id, active, display_order)
+
+Do not remove products.stock yet.
+
+Treat products.stock as a temporary cached/legacy total during this phase.
+
+Document that variant stock is the future source of truth.
+
+==================================================
+3. SEED UPDATE
+==================================================
+
+Extend the idempotent seed.
+
+For every current product:
+
+- create sizes S, M, L, XL and XXL;
+- distribute the current product stock across variants deterministically;
+- the sum of active variant stock must equal products.stock;
+- do not create duplicates on repeated execution.
+
+Create at least one product image record per product using its current primary_image_path.
+
+Where additional real local images exist, add them.
+
+Do not invent remote URLs.
+
+Set exactly one primary image per product.
+
+Seed must remain idempotent.
+
+==================================================
+4. DOMAIN MODEL
+==================================================
+
+Add strict types:
+
+ProductImage:
+- id
+- imagePath
+- altText
+- displayOrder
+- isPrimary
+
+ProductVariant:
+- id
+- sizeCode
+- sku
+- stock
+- active
+- displayOrder
+
+Extend Product:
+
+- images: ProductImage[]
+- variants: ProductVariant[]
+
+Keep the catalog query lightweight.
+
+Do not load complete images and variants for every catalog card unless necessary.
+
+Use separate models if appropriate:
+
+- ProductSummary for catalog
+- ProductDetail for detail page
+
+Prefer this separation if it keeps queries clear.
+
+No any.
+
+==================================================
+5. REPOSITORY CONTRACT
+==================================================
+
+Separate public and internal reads.
+
+Public repository methods:
+
+- findCatalogProducts(): Promise<ProductSummary[]>
+- findPublicBySlug(slug: string): Promise<ProductDetail | null>
+
+The public slug query must require:
+
+- product.published = true
+- category.active = true
+
+Do not expose unpublished products publicly.
+
+Keep or rename internal methods carefully, but do not create admin writes.
+
+For product detail:
+
+- load product and category;
+- load ordered images;
+- load active variants ordered by display_order and size_code;
+- avoid a Cartesian product query;
+- use separate parameterized queries or a safe aggregation strategy.
+
+All SQL must remain inside repository infrastructure.
+
+==================================================
+6. SERVICE LAYER
+==================================================
+
+ProductService must expose:
+
+- getCatalog()
+- getPublicProductBySlug(slug)
+
+Validate slug:
+
+- non-empty;
+- reasonable maximum length;
+- expected slug format.
+
+Return null for unavailable public products.
+
+Do not leak database errors to the UI.
+
+==================================================
+7. PRODUCT DETAIL ROUTE
+==================================================
+
+Create:
+
+src/pages/productos/[slug].astro
+
+Use SSR.
+
+Behavior:
+
+- read Astro.params.slug;
+- call getPublicProductBySlug;
+- return a real 404 when product does not exist or is unpublished;
+- use the existing Layout;
+- keep all visible content in Spanish.
+
+Design a modern premium detail page with:
+
+- breadcrumb;
+- image gallery;
+- primary image;
+- selectable thumbnails;
+- product category;
+- product name;
+- retail price as primary;
+- wholesale price only when not null;
+- wholesale minimum text;
+- description;
+- size selector;
+- stock state;
+- quantity selector;
+- add-to-cart action;
+- shipping/help trust block;
+- WhatsApp consultation;
+- related catalog link.
+
+Do not redesign the global site.
+
+Responsive:
+
+- mobile: one column;
+- desktop: gallery left, purchase information right;
+- no horizontal overflow;
+- sticky purchase panel on desktop only if it remains stable.
+
+==================================================
+8. IMAGE GALLERY
+==================================================
+
+Implement gallery behavior with minimal client JavaScript.
+
+Requirements:
+
+- primary image displayed initially;
+- thumbnails update the main image;
+- active thumbnail state;
+- meaningful alt text;
+- object-contain;
+- no external image library;
+- no carousel dependency;
+- keyboard-accessible buttons;
+- reduced-motion support;
+- local fallback image.
+
+Make listener initialization idempotent with Astro View Transitions.
+
+==================================================
+9. SIZE AND STOCK SELECTION
+==================================================
+
+Render only active variants.
+
+Each size button must show:
+
+- size code;
+- disabled state when stock = 0;
+- selected state;
+- accessible aria-pressed or radio semantics.
+
+Before adding to cart:
+
+- require a selected in-stock size;
+- display a Spanish validation message if none is selected;
+- quantity cannot exceed selected variant stock;
+- minimum quantity 1.
+
+Do not decrement database stock in this phase.
+
+==================================================
+10. CART CONTRACT EVOLUTION
+==================================================
+
+Update cart items to include:
+
+- productId
+- productSlug
+- variantId
+- sizeCode
+- name
+- imagePath
+- retailPrice
+- wholesalePrice
+- wholesaleMinimum
+- quantity
+
+Cart identity must be:
+
+productId + variantId
+
+Adding the same product and size increments quantity.
+
+Adding the same product with another size creates another cart line.
+
+Prevent quantity from exceeding known variant stock.
+
+Preserve localStorage cart persistence.
+
+Add a versioned storage key or migration strategy so legacy cart data does not break the new cart.
+
+Example:
+
+paraiso-cart-v2
+
+Do not create orders or write cart state to MySQL.
+
+==================================================
+11. WHOLESALE PRICING
+==================================================
+
+Centralize pricing logic in one client-safe module.
+
+Clarify and implement the existing rule:
+
+- wholesale pricing applies when total cart quantity reaches the configured threshold;
+- use each product wholesaleMinimum;
+- if products have different thresholds, document and implement a deterministic rule.
+
+Preferred initial rule:
+
+A product line receives its wholesale unit price when the total quantity of that same product across all sizes reaches product.wholesaleMinimum.
+
+Do not apply wholesale price when wholesalePrice is null.
+
+Show the user:
+
+- retail subtotal;
+- wholesale savings when applicable;
+- remaining units required for wholesale price.
+
+Keep all messages in Spanish.
+
+==================================================
+12. CATALOG CARD LINKS
+==================================================
+
+Make the product image and product title link to:
+
+/productos/{slug}
+
+CamisetaCard must receive slug.
+
+Do not make the entire card a nested interactive element.
+
+Keep Add to Cart behavior only if a default size can be selected safely.
+
+Preferred behavior:
+
+- replace catalog card direct add with “Ver producto” because size selection is required;
+- or open a simple size selector only if implemented accessibly.
+
+Do not add an unspecified size to cart.
+
+==================================================
+13. SEO
+==================================================
+
+For each product detail page add:
+
+- unique title;
+- unique description;
+- canonical URL;
+- Open Graph title;
+- Open Graph description;
+- Open Graph image;
+- product URL.
+
+Add Product JSON-LD with:
+
+- name;
+- description;
+- image;
+- SKU when available;
+- ARS currency;
+- retail price;
+- availability based on total active variant stock;
+- canonical URL.
+
+Do not claim official licensing unless stored data supports it.
+
+Use https://paraisofutbol.com.
+
+==================================================
+14. FIX KNOWN ISSUES
+==================================================
+
+Correct these current issues:
+
+1. Do not map null wholesalePrice to 0.
+2. Public findBySlug must filter published and active category.
+3. Make product filter listeners idempotent.
+4. Keep errors server-side and safe.
+5. Do not expose unpublished products through the public detail route.
+
+==================================================
+15. DOCUMENTATION
+==================================================
+
+Update:
+
+- README.md
+- docs/architecture.md
+- docs/database-current-state.md
+- docs/database-migrations.md
+
+Create:
+
+docs/product-model.md
+
+Document:
+
+- ProductSummary vs ProductDetail;
+- images;
+- variants;
+- stock source of truth;
+- cart line identity;
+- wholesale rule;
+- why admin CRUD remains deferred.
+
+No secrets.
+
+==================================================
+16. DATABASE EXECUTION
+==================================================
+
+Using the configured online MySQL database:
+
+1. npm run db:status
+2. npm run db:migrate
+3. npm run db:seed
+4. run migrate and seed again
+5. prove idempotency
+6. validate:
+   - image rows;
+   - variant rows;
+   - one primary image per product;
+   - unique sizes per product;
+   - variant stock totals;
+   - no duplicate rows.
+
+Do not drop or truncate tables.
+
+==================================================
+17. VALIDATION
+==================================================
+
+Run:
+
+- npm ci
+- npm run check
+- npm run build
+- npm start
+
+Validate:
+
+- health endpoints return 200;
+- catalog still shows five products;
+- filters work once after View Transitions;
+- every card opens its detail page;
+- invalid slug returns 404;
+- unpublished product is not publicly accessible;
+- gallery works;
+- size selection works;
+- out-of-stock size is disabled;
+- cart differentiates sizes;
+- cart persistence works;
+- quantity respects stock;
+- wholesale rule works;
+- no `$0` wholesale price appears;
+- mobile and desktop layouts are stable;
+- admin remains blocked in production;
+- no write API was added;
+- no secrets were exposed.
+
+Test viewports:
+
+- 375px
+- 768px
+- 1024px
+- 1440px
+
+==================================================
+18. ACCEPTANCE CRITERIA
+==================================================
+
+Accept only if:
+
+- migrations 003 and 004 are applied;
+- seed is idempotent;
+- images and variants are relational;
+- public detail route exists;
+- public slug access respects publication state;
+- cards link to detail;
+- size is required before cart insertion;
+- cart identifies lines by variant;
+- wholesale null is handled correctly;
+- check and build pass;
+- production server starts;
+- admin remains unchanged and protected;
+- no authentication or admin CRUD was introduced.
+
+==================================================
+19. FINAL REPORT
+==================================================
+
+Return:
+
+1. audit findings;
+2. migrations added;
+3. schema changes;
+4. seed and idempotency results;
+5. domain/repository/service changes;
+6. product detail implementation;
+7. gallery behavior;
+8. variant and stock behavior;
+9. cart migration;
+10. wholesale rule;
+11. SEO changes;
+12. files created;
+13. files modified;
+14. commands executed;
+15. check/build/start results;
+16. responsive validation;
+17. security findings;
+18. remaining risks;
+19. recommended Phase 4 scope.
+
+Implement the full phase. Do not stop at recommendations.

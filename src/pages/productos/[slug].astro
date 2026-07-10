@@ -1,0 +1,417 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { productService } from '../../modules/products/product.container';
+
+const { slug } = Astro.params;
+
+// Fetch product details
+const product = await productService.getPublicProductBySlug(slug || '');
+
+// If product does not exist or is unpublished, return 404
+if (!product) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found'
+  });
+}
+
+// Structured data JSON-LD
+const totalActiveStock = product.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+const availability = totalActiveStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  'name': product.name,
+  'description': product.description || `Camiseta de fútbol ${product.name} calidad premium en El Paraíso del Fútbol.`,
+  'image': `https://paraisofutbol.com${product.primaryImagePath}`,
+  'sku': product.sku || `PROD-${product.id}`,
+  'offers': {
+    '@type': 'Offer',
+    'priceCurrency': 'ARS',
+    'price': product.retailPrice,
+    'availability': availability,
+    'url': `https://paraisofutbol.com/productos/${product.slug}`
+  }
+};
+
+// Formatter for prices
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 0
+  }).format(price);
+};
+---
+
+<Layout 
+  title={`${product.name} - El Paraíso del Fútbol`}
+  description={product.description || `Camiseta ${product.name} premium.`}
+>
+  <!-- SEO & OpenGraph Elements in Head (Astro lets us inject variables in layout props) -->
+  <Fragment slot="head">
+    <meta property="og:title" content={`${product.name} - El Paraíso del Fútbol`} />
+    <meta property="og:description" content={product.description || `Comprá la camiseta de ${product.name} al mejor precio.`} />
+    <meta property="og:image" content={`https://paraisofutbol.com${product.primaryImagePath}`} />
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content={`https://paraisofutbol.com/productos/${product.slug}`} />
+    <link rel="canonical" href={`https://paraisofutbol.com/productos/${product.slug}`} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </Fragment>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb (Migas de pan) -->
+    <nav class="flex text-xs text-neutral-500 space-x-2 mb-8" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-gold-400 transition-colors">Inicio</a>
+      <span>/</span>
+      <a href="/productos" class="hover:text-gold-400 transition-colors">Productos</a>
+      <span>/</span>
+      <span class="text-neutral-300 font-semibold">{product.name}</span>
+    </nav>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <!-- Left Column: Gallery (5 cols on desktop) -->
+      <div class="lg:col-span-6 space-y-4">
+        <!-- Main Image Card -->
+        <div class="aspect-[4/5] bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden flex items-center justify-center p-6 relative">
+          <img 
+            id="gallery-main-image"
+            src={product.primaryImagePath} 
+            alt={product.name} 
+            class="max-h-full max-w-full object-contain transition-all duration-300"
+            onerror="this.onerror=null; this.src='/placeholder.svg';"
+          />
+        </div>
+
+        <!-- Thumbnails Gallery -->
+        {product.images.length > 1 && (
+          <div class="flex gap-3 overflow-x-auto py-2" id="gallery-thumbnails">
+            {product.images.map((img, index) => (
+              <button 
+                class={`w-20 h-20 bg-neutral-900 border rounded-lg overflow-hidden flex items-center justify-center p-2 transition-all hover:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/50 ${img.isPrimary ? 'border-gold-500 active-thumbnail' : 'border-neutral-800'}`}
+                data-image-path={img.imagePath}
+                aria-label={`Ver imagen ${index + 1} de ${product.name}`}
+              >
+                <img 
+                  src={img.imagePath} 
+                  alt={img.altText || `${product.name} vista ${index + 1}`} 
+                  class="max-h-full max-w-full object-contain pointer-events-none"
+                  onerror="this.onerror=null; this.src='/placeholder.svg';"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <!-- Right Column: Product Purchase Info (6 cols on desktop) -->
+      <div class="lg:col-span-6 space-y-6">
+        <!-- Category & Badges -->
+        <div class="space-y-2">
+          <span class="text-xs font-bold text-celeste-400 uppercase tracking-widest block">
+            {product.category.name}
+          </span>
+          <h1 class="text-3xl sm:text-4xl font-extrabold uppercase font-display text-neutral-100 tracking-tight leading-tight">
+            {product.name}
+          </h1>
+          {product.sku && (
+            <span class="text-[10px] text-neutral-500 font-mono">SKU: {product.sku}</span>
+          )}
+        </div>
+
+        <hr class="border-neutral-900" />
+
+        <!-- Prices block -->
+        <div class="space-y-2">
+          <div class="flex items-baseline space-x-3">
+            <span class="text-3xl font-extrabold text-gold-400 font-display">
+              {formatPrice(product.retailPrice)}
+            </span>
+            <span class="text-xs text-neutral-400">Precio Minorista</span>
+          </div>
+
+          {product.wholesalePrice !== null && (
+            <div class="bg-gold-500/5 border border-gold-500/10 p-3 rounded-lg flex items-center justify-between">
+              <div>
+                <span class="text-xl font-extrabold text-gold-500 font-display">
+                  {formatPrice(product.wholesalePrice)}
+                </span>
+                <span class="text-[10px] text-neutral-400 ml-1.5">Precio Mayorista</span>
+              </div>
+              <span class="text-[10px] bg-gold-500/10 text-gold-400 px-2.5 py-1 rounded border border-gold-500/20 font-bold uppercase tracking-wider">
+                Min. {product.wholesaleMinimum} unidades
+              </span>
+            </div>
+          )}
+        </div>
+
+        {product.description && (
+          <p class="text-sm text-neutral-400 leading-relaxed">
+            {product.description}
+          </p>
+        )}
+
+        <hr class="border-neutral-900" />
+
+        <!-- Purchase Action Form -->
+        <div class="space-y-5">
+          <!-- Size Selector -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-neutral-300">Seleccionar Talle:</span>
+              <span id="selected-size-label" class="text-gold-400 font-semibold">Ninguno seleccionado</span>
+            </div>
+            
+            <div class="flex flex-wrap gap-2.5" id="size-selector-container">
+              {product.variants.map((v) => {
+                const outOfStock = v.stock === 0;
+                return (
+                  <button 
+                    type="button"
+                    class={`min-w-[50px] h-12 text-xs font-extrabold uppercase rounded-lg border flex items-center justify-center transition-all duration-300 relative ${outOfStock ? 'border-neutral-900 text-neutral-600 bg-neutral-950/20 cursor-not-allowed' : 'border-neutral-800 bg-neutral-900/40 text-neutral-200 hover:border-gold-500 hover:bg-neutral-900 active:scale-95'}`}
+                    data-variant-id={v.id}
+                    data-size-code={v.sizeCode}
+                    data-stock={v.stock}
+                    disabled={outOfStock}
+                    aria-label={`Talle ${v.sizeCode} ${outOfStock ? '(Sin stock)' : `(${v.stock} disponibles)`}`}
+                  >
+                    {v.sizeCode}
+                    {outOfStock && (
+                      <div class="absolute inset-0 bg-[linear-gradient(to_top_right,_transparent_48%,_#525252_49%,_#525252_51%,_transparent_52%)] pointer-events-none rounded-lg"></div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <!-- Error message container -->
+            <p id="size-error-msg" class="text-xs text-red-500 hidden font-semibold flex items-center gap-1">
+              <span>⚠️</span> Por favor, seleccioná un talle antes de agregar al carrito.
+            </p>
+          </div>
+
+          <!-- Quantity Selector -->
+          <div class="space-y-2">
+            <label for="quantity" class="text-xs font-bold text-neutral-300 block">Cantidad:</label>
+            <div class="flex items-center space-x-3">
+              <div class="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden h-12">
+                <button 
+                  type="button" 
+                  id="qty-minus"
+                  class="px-4 text-neutral-400 hover:text-white hover:bg-neutral-850 h-full font-bold transition-colors"
+                >-</button>
+                <input 
+                  type="number" 
+                  id="quantity" 
+                  value="1" 
+                  min="1" 
+                  max="99"
+                  class="w-12 bg-transparent text-center font-bold text-sm text-neutral-200 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button 
+                  type="button" 
+                  id="qty-plus"
+                  class="px-4 text-neutral-400 hover:text-white hover:bg-neutral-850 h-full font-bold transition-colors"
+                >+</button>
+              </div>
+              <span id="stock-hint" class="text-xs text-neutral-500"></span>
+            </div>
+          </div>
+
+          <!-- Add to Cart Button -->
+          <button 
+            type="button"
+            id="add-to-cart-btn"
+            class="w-full bg-gold-500 hover:bg-gold-400 text-neutral-950 font-extrabold h-14 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 shadow-lg shadow-gold-500/10 active:scale-[0.98] flex items-center justify-center space-x-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span>Agregar al Carrito</span>
+          </button>
+        </div>
+
+        <hr class="border-neutral-900" />
+
+        <!-- Shipping and Info Block -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 bg-neutral-900/40 rounded-xl border border-neutral-850 flex items-start space-x-3">
+            <span class="text-xl text-celeste-400">✈</span>
+            <div class="space-y-1">
+              <h4 class="text-xs font-bold text-neutral-200">Envíos a todo el país</h4>
+              <p class="text-[10px] text-neutral-400 leading-normal">Despacho por Correo Argentino a domicilio o sucursal.</p>
+            </div>
+          </div>
+          <div class="p-4 bg-neutral-900/40 rounded-xl border border-neutral-850 flex items-start space-x-3">
+            <span class="text-xl text-gold-400">★</span>
+            <div class="space-y-1">
+              <h4 class="text-xs font-bold text-neutral-200">Calidad Asegurada</h4>
+              <p class="text-[10px] text-neutral-400 leading-normal">Escudos bordados y tela premium importada de alta resistencia.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Consultation Button -->
+        <a 
+          href={`https://wa.me/5491100000000?text=Hola!%20Me%20interesa%20la%20camiseta%20${encodeURIComponent(product.name)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-neutral-300 font-bold h-12 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center space-x-2"
+        >
+          <span>💬</span>
+          <span>Consultar por WhatsApp</span>
+        </a>
+
+        <!-- Related link -->
+        <div class="text-center pt-2">
+          <a href="/productos" class="text-xs text-neutral-400 hover:text-gold-400 underline transition-colors">
+            &larr; Volver al catálogo general
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ product }}>
+  // Client-side purchase logic
+  let selectedVariant = null;
+
+  function initPage() {
+    const sizeButtons = document.querySelectorAll('#size-selector-container button');
+    const selectedSizeLabel = document.getElementById('selected-size-label');
+    const sizeErrorMsg = document.getElementById('size-error-msg');
+    
+    const qtyInput = document.getElementById('quantity');
+    const qtyMinus = document.getElementById('qty-minus');
+    const qtyPlus = document.getElementById('qty-plus');
+    const stockHint = document.getElementById('stock-hint');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+    // Reset state
+    selectedVariant = null;
+    if (selectedSizeLabel) selectedSizeLabel.innerText = 'Ninguno seleccionado';
+    if (qtyInput) qtyInput.value = '1';
+    if (stockHint) stockHint.innerText = '';
+    if (sizeErrorMsg) sizeErrorMsg.classList.add('hidden');
+
+    // 1. Gallery Listener
+    const mainImg = document.getElementById('gallery-main-image');
+    const thumbButtons = document.querySelectorAll('#gallery-thumbnails button');
+
+    thumbButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remove active border from all thumbs
+        thumbButtons.forEach(b => b.classList.remove('border-gold-500'));
+        // Add to clicked
+        btn.classList.add('border-gold-500');
+
+        const newPath = btn.getAttribute('data-image-path');
+        if (mainImg && newPath) {
+          mainImg.setAttribute('src', newPath);
+        }
+      });
+    });
+
+    // 2. Size Selector Listeners
+    sizeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Toggle selected styling
+        sizeButtons.forEach(b => {
+          b.classList.remove('border-gold-500', 'bg-gold-500/10', 'text-gold-400');
+          b.classList.add('border-neutral-800', 'bg-neutral-900/40', 'text-neutral-200');
+        });
+
+        btn.classList.remove('border-neutral-800', 'bg-neutral-900/40', 'text-neutral-200');
+        btn.classList.add('border-gold-500', 'bg-gold-500/10', 'text-gold-400');
+
+        const id = Number(btn.getAttribute('data-variant-id'));
+        const sizeCode = btn.getAttribute('data-size-code');
+        const stock = Number(btn.getAttribute('data-stock'));
+
+        selectedVariant = { id, sizeCode, stock };
+        if (selectedSizeLabel) selectedSizeLabel.innerText = `Talle ${sizeCode}`;
+        if (sizeErrorMsg) sizeErrorMsg.classList.add('hidden');
+
+        // Update quantity bounds
+        if (qtyInput) {
+          qtyInput.max = stock.toString();
+          if (Number(qtyInput.value) > stock) {
+            qtyInput.value = stock.toString();
+          }
+        }
+        if (stockHint) {
+          stockHint.innerText = `(${stock} disponibles)`;
+        }
+      });
+    });
+
+    // 3. Quantity Selector Listeners
+    if (qtyMinus) {
+      qtyMinus.addEventListener('click', () => {
+        let val = Number(qtyInput.value);
+        if (val > 1) {
+          qtyInput.value = (val - 1).toString();
+        }
+      });
+    }
+
+    if (qtyPlus) {
+      qtyPlus.addEventListener('click', () => {
+        let val = Number(qtyInput.value);
+        const maxLimit = selectedVariant ? selectedVariant.stock : 99;
+        if (val < maxLimit) {
+          qtyInput.value = (val + 1).toString();
+        }
+      });
+    }
+
+    if (qtyInput) {
+      qtyInput.addEventListener('change', () => {
+        let val = Number(qtyInput.value);
+        const maxLimit = selectedVariant ? selectedVariant.stock : 99;
+        if (isNaN(val) || val < 1) {
+          qtyInput.value = '1';
+        } else if (val > maxLimit) {
+          qtyInput.value = maxLimit.toString();
+        }
+      });
+    }
+
+    // 4. Add to Cart Button Listener
+    if (addToCartBtn) {
+      addToCartBtn.addEventListener('click', () => {
+        if (!selectedVariant) {
+          if (sizeErrorMsg) sizeErrorMsg.classList.remove('hidden');
+          return;
+        }
+
+        const quantity = Number(qtyInput.value);
+
+        // Dispatch custom add to cart event
+        const event = new CustomEvent('add-to-cart', {
+          detail: {
+            id: `${product.id}_${selectedVariant.id}`,
+            productId: product.id,
+            productSlug: product.slug,
+            variantId: selectedVariant.id,
+            sizeCode: selectedVariant.sizeCode,
+            name: product.name,
+            imagePath: product.primaryImagePath,
+            retailPrice: product.retailPrice,
+            wholesalePrice: product.wholesalePrice,
+            wholesaleMinimum: product.wholesaleMinimum,
+            cantidad: quantity, // using 'cantidad' to maintain compatibility with cart item structure
+            variantStock: selectedVariant.stock
+          }
+        });
+        document.dispatchEvent(event);
+      });
+    }
+  }
+
+  // Load listeners on page render and View Transitions
+  document.addEventListener('astro:page-load', initPage);
+</script>

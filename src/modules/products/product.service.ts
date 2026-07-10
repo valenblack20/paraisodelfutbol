@@ -1,33 +1,48 @@
 import type { ProductRepository } from './product.repository';
-import type { Product } from './product.types';
+import type { ProductSummary, ProductDetail } from './product.types';
 
 export class ProductService {
   constructor(private productRepository: ProductRepository) {}
 
   /**
-   * Retrieves the full catalog of products
+   * Retrieves the full catalog of public products
    */
-  public async getCatalog(): Promise<Product[]> {
-    return this.productRepository.findCatalogProducts();
+  public async getCatalog(): Promise<ProductSummary[]> {
+    try {
+      return await this.productRepository.findCatalogProducts();
+    } catch (error) {
+      console.error('[ProductService] Error fetching catalog:', error);
+      // Return empty array to keep UI safe instead of crashing
+      return [];
+    }
   }
 
   /**
-   * Retrieves a single product by its database ID
+   * Retrieves a single public product by its unique slug
    */
-  public async getProductById(id: number): Promise<Product | null> {
-    if (id <= 0 || isNaN(id)) {
-      throw new Error(`ProductService error: Invalid product ID: ${id}`);
+  public async getPublicProductBySlug(slug: string): Promise<ProductDetail | null> {
+    // Validate slug
+    if (!slug || typeof slug !== 'string') {
+      return null;
     }
-    return this.productRepository.findById(id);
-  }
+    
+    const trimmedSlug = slug.trim();
+    if (trimmedSlug.length === 0 || trimmedSlug.length > 180) {
+      return null;
+    }
 
-  /**
-   * Retrieves a single product by its unique slug
-   */
-  public async getProductBySlug(slug: string): Promise<Product | null> {
-    if (!slug) {
-      throw new Error('ProductService error: Slug is required');
+    // URL friendly regex validation (alphanumeric and dashes)
+    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+    if (!slugRegex.test(trimmedSlug)) {
+      return null;
     }
-    return this.productRepository.findBySlug(slug);
+
+    try {
+      return await this.productRepository.findPublicBySlug(trimmedSlug);
+    } catch (error) {
+      console.error(`[ProductService] Error fetching product by slug "${trimmedSlug}":`, error);
+      // Return null to treat as 404 in UI instead of leaking error
+      return null;
+    }
   }
 }

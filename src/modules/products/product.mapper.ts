@@ -1,11 +1,11 @@
-import type { Product } from './product.types';
-import type { ProductRow } from './product-row.types';
+import type { ProductSummary, ProductDetail, ProductImage, ProductVariant } from './product.types';
+import type { ProductRow, ProductImageRow, ProductVariantRow } from './product-row.types';
 
 export class ProductMapper {
   /**
-   * Maps a database joined row (ProductRow) to a clean Domain Model (Product)
+   * Maps a database joined row (ProductRow) to a clean ProductSummary Domain Model
    */
-  public static toDomain(row: ProductRow): Product {
+  public static toSummary(row: ProductRow): ProductSummary {
     if (!row) {
       throw new Error('ProductMapper mapping error: Cannot map null or undefined row.');
     }
@@ -59,8 +59,6 @@ export class ProductMapper {
       primaryImagePath: row.primary_image_path,
       featured: Boolean(row.featured),
       published: Boolean(row.published),
-      createdAt: row.created_at ? new Date(row.created_at) : undefined,
-      updatedAt: row.updated_at ? new Date(row.updated_at) : undefined,
       category: {
         id: row.category_id,
         name: row.category_name,
@@ -72,9 +70,65 @@ export class ProductMapper {
   }
 
   /**
-   * Maps an array of database rows to an array of Domain Models
+   * Maps an array of database rows to an array of ProductSummary models
    */
-  public static toDomainList(rows: ProductRow[]): Product[] {
-    return rows.map((row) => this.toDomain(row));
+  public static toSummaryList(rows: ProductRow[]): ProductSummary[] {
+    return rows.map((row) => this.toSummary(row));
+  }
+
+  /**
+   * Maps product, images and variants rows to a full ProductDetail Domain Model
+   */
+  public static toDetail(
+    row: ProductRow,
+    imageRows: ProductImageRow[],
+    variantRows: ProductVariantRow[]
+  ): ProductDetail {
+    const summary = this.toSummary(row);
+
+    const images: ProductImage[] = imageRows.map(img => {
+      if (img.id === undefined || img.id === null) {
+        throw new Error('ProductMapper mapping error: Missing field "id" on image.');
+      }
+      if (!img.image_path) {
+        throw new Error('ProductMapper mapping error: Missing field "image_path" on image.');
+      }
+      return {
+        id: img.id,
+        imagePath: img.image_path,
+        altText: img.alt_text ?? null,
+        displayOrder: Number(img.display_order ?? 0),
+        isPrimary: Boolean(img.is_primary),
+      };
+    });
+
+    const variants: ProductVariant[] = variantRows.map(v => {
+      if (v.id === undefined || v.id === null) {
+        throw new Error('ProductMapper mapping error: Missing field "id" on variant.');
+      }
+      if (!v.size_code) {
+        throw new Error('ProductMapper mapping error: Missing field "size_code" on variant.');
+      }
+      const stockVal = Number(v.stock ?? 0);
+      if (isNaN(stockVal) || stockVal < 0) {
+        throw new Error(`ProductMapper mapping error: Invalid stock ${v.stock} on variant ID ${v.id}.`);
+      }
+      return {
+        id: v.id,
+        sizeCode: v.size_code,
+        sku: v.sku ?? null,
+        stock: stockVal,
+        active: Boolean(v.active),
+        displayOrder: Number(v.display_order ?? 0),
+      };
+    });
+
+    return {
+      ...summary,
+      images,
+      variants,
+      createdAt: row.created_at ? new Date(row.created_at) : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at) : undefined,
+    };
   }
 }

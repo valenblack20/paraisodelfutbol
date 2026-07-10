@@ -13,14 +13,12 @@ Las versiones aplicadas se registran en la tabla interna `schema_migrations`:
 - `version` (VARCHAR(100), PRIMARY KEY): Nombre del archivo de migración (ej. `001_create_catalog_tables.sql`).
 - `applied_at` (TIMESTAMP): Fecha y hora en que se aplicó la migración.
 
-### Flujo de Ejecución del Runner
-1. Lee los archivos SQL ordenados alfabéticamente de `db/migrations/`.
-2. Consulta la tabla `schema_migrations` para identificar cuáles ya fueron aplicadas.
-3. Ejecuta únicamente las migraciones pendientes.
-4. Cada migración se ejecuta dentro de una transacción de base de datos.
-5. Si ocurre algún error en las sentencias de una migración, se realiza un rollback automático y se aborta el proceso inmediatamente.
-6. Nunca se ejecuta una migración dos veces.
-7. Los secretos y contraseñas de la base de datos están protegidos y no se exponen en los logs.
+### Historial de Migraciones Oficiales
+Actualmente se han definido y aplicado las siguientes migraciones:
+- **`001_create_catalog_tables.sql`:** Inicializa las tablas base `categories` y `products`.
+- **`002_create_catalog_indexes.sql`:** Crea índices de rendimiento para búsquedas rápidas.
+- **`003_create_product_images.sql`:** Crea la tabla relacional `product_images` para soporte de galerías.
+- **`004_create_product_variants.sql`:** Crea la tabla relacional `product_variants` para el stock por talle.
 
 ---
 
@@ -41,7 +39,7 @@ npm run db:migrate
 ```
 
 ### Poblar Datos Semilla
-Inserta o actualiza de manera idempotente los productos iniciales y sus categorías:
+Inserta o actualiza de manera idempotente los productos iniciales, sus variantes y sus imágenes:
 ```bash
 npm run db:seed
 ```
@@ -53,13 +51,13 @@ npm run db:seed
 
 ### Cómo Crear una Nueva Migración
 1. Creá un nuevo archivo SQL en `db/migrations/`.
-2. Utilizá un prefijo numérico secuencial de 3 dígitos (ej: `003_add_new_table.sql`).
+2. Utilizá un prefijo numérico secuencial de 3 dígitos (ej: `005_add_new_table.sql`).
 3. Asegurá que la migración no contenga instrucciones como `CREATE DATABASE`, `USE nombre_base` o `DROP DATABASE`. La conexión ya selecciona automáticamente la base de datos configurada en el archivo `.env`.
 
 ### Modificación de Migraciones
 > [!IMPORTANT]
 > **Nunca modifiques un archivo de migración que ya haya sido aplicado en producción.**
-> Cualquier cambio posterior, corrección de errores o alteración de esquema debe realizarse mediante una **nueva migración** (ej. `003_alter_products_table.sql`).
+> Cualquier cambio posterior, corrección de errores o alteración de esquema debe realizarse mediante una **nueva migración** (ej. `005_alter_products_table.sql`).
 
 ### Estrategia de Respaldo (Backup)
 Antes de aplicar migraciones destructivas o realizar cambios en el esquema en producción, realizá un backup manual de la base de datos:

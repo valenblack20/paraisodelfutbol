@@ -23,3 +23,26 @@ export interface ProductRow extends RowDataPacket {
   category_product_type: 'CLUB' | 'NATIONAL_TEAM' | 'OTHER';
   category_scope: 'NATIONAL' | 'INTERNATIONAL';
 }
+
+export interface ProductImageRow extends RowDataPacket {
+  id: number;
+  product_id: number;
+  image_path: string;
+  alt_text: string | null;
+  display_order: number;
+  is_primary: number | boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface ProductVariantRow extends RowDataPacket {
+  id: number;
+  product_id: number;
+  size_code: string;
+  sku: string | null;
+  stock: number;
+  active: number | boolean;
+  display_order: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
