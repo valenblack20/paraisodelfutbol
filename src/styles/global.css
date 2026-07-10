@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import './tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -6,13 +7,16 @@
 
 @layer base {
   body {
-    @apply bg-neutral-950 text-neutral-100 font-sans antialiased overflow-x-hidden selection:bg-celeste-500 selection:text-neutral-950;
-    /* Stadium reflector top light and concrete/mesh texture overlay */
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    @apply font-sans antialiased overflow-x-hidden selection:bg-celeste-500 selection:text-neutral-950;
+    
+    /* Subtle stadium reflector top light and mesh texture */
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.12) 0%, rgba(116, 172, 223, 0.05) 30%, rgba(212, 175, 55, 0.01) 50%, transparent 80%),
-      linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
-    background-size: 100% 100%, 20px 20px, 20px 20px;
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, rgba(116, 172, 223, 0.01) 30%, transparent 70%),
+      linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
+    background-size: 100% 100%, 24px 24px, 24px 24px;
     background-attachment: fixed;
   }
 }
@@ -33,7 +37,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37;
+  background: var(--color-gold);
 }
 
 /* Tipografía de display para títulos */
@@ -45,7 +49,7 @@
 
 /* Animaciones personalizadas */
 .stars-shimmer {
-  background: linear-gradient(90deg, #D4AF37 0%, #FFFFFF 35%, #D4AF37 70%, #FFFFFF 100%);
+  background: linear-gradient(90deg, var(--color-gold) 0%, #FFFFFF 35%, var(--color-gold) 70%, #FFFFFF 100%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
@@ -62,61 +66,26 @@
   }
 }
 
-/* Efectos de neón en tarjetas según club */
-.neon-glow-boca {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.neon-glow-boca:hover {
-  border-color: #D4AF37 !important;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 0 12px rgba(62, 122, 191, 0.15);
-  transform: translateY(-4px);
-}
-
-.neon-glow-river {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.neon-glow-river:hover {
-  border-color: #e11d48 !important;
-  box-shadow: 0 0 20px rgba(225, 29, 72, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-}
-
-.neon-glow-argentina {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.neon-glow-argentina:hover {
-  border-color: #74ACDF !important;
-  box-shadow: 0 0 20px rgba(116, 172, 223, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.15);
-  transform: translateY(-4px);
-}
-
-.neon-glow-neutral {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.neon-glow-neutral:hover {
-  border-color: #D4AF37 !important;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
-  transform: translateY(-4px);
-}
-
 /* Separadores de sección patrios */
 .separator-patrio {
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #74ACDF 25%, #FFFFFF 50%, #74ACDF 75%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--color-sky) 25%, #FFFFFF 50%, var(--color-sky) 75%, transparent 100%);
   border: none;
   width: 100%;
   margin: 3rem 0;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 
-/* Botón Agregar al Carrito con Garra */
-.btn-garra {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+/* Soporte para accesibilidad: reducción de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-card img,
+  .product-card button,
+  .stars-shimmer {
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
 }
-.btn-garra:hover:not(:disabled) {
-  transform: scale(1.04);
-  background: linear-gradient(135deg, #74ACDF 0%, #FFFFFF 50%, #D4AF37 100%) !important;
-  color: #0a0a0a !important;
-  box-shadow: 0 0 20px rgba(116, 172, 223, 0.5);
-}
+
 
