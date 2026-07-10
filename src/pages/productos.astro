@@ -1,17 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CamisetaCard from '../components/CamisetaCard.astro';
-import { query } from '../lib/db.js';
-
-// Habilitamos rendering híbrido (se puede prerenderizar estático si se desea, o dinámico)
-export const prerender = true;
+import { getDatabasePool } from '../infrastructure/database/mysql';
 
 // Obtener todas las camisetas de la base de datos
 let camisetas = [];
 try {
-  camisetas = await query('SELECT * FROM camisetas');
+  const pool = getDatabasePool();
+  const [rows] = await pool.query('SELECT * FROM camisetas');
+  camisetas = rows as any[];
 } catch (e) {
   console.error('Error cargando camisetas en catálogo:', e);
+  throw e;
 }
 ---
 

@@ -10,6 +10,7 @@ dist/
 # Entorno local (¡NO subir credenciales a GitHub!)
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Editor y sistema
