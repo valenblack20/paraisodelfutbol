@@ -41,8 +41,7 @@ export class ProductService {
       return await this.productRepository.findPublicBySlug(trimmedSlug);
     } catch (error) {
       console.error(`[ProductService] Error fetching product by slug "${trimmedSlug}":`, error);
-      // Return null to treat as 404 in UI instead of leaking error
-      return null;
+      throw new Error('La base de datos del catálogo no está disponible.');
     }
   }
 }

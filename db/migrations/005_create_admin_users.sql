@@ -1,0 +1,13 @@
+-- Migration: 005_create_admin_users.sql
+-- Create table for admin users persistence
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  display_name VARCHAR(120) NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_login_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

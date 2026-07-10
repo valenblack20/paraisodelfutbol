@@ -1,6 +1,7 @@
 ---
 // Cart.astro
-const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
+import { env } from '../infrastructure/config/env';
+const whatsappNumber = env.PUBLIC_WHATSAPP_NUMBER;
 ---
 
 <!-- Overlay del carrito -->
@@ -92,10 +93,46 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
     badgeEl = document.getElementById('cart-badge');
   }
 
+  // Helper to escape HTML tags to prevent XSS
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // Cargar carrito desde localStorage con soporte para versionado paraiso-cart-v2
   function loadCart() {
     const saved = localStorage.getItem('paraiso-cart-v2');
-    cart = saved ? JSON.parse(saved) : [];
+    let parsed = [];
+    try {
+      parsed = saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      parsed = [];
+    }
+
+    if (Array.isArray(parsed)) {
+      cart = parsed.filter(item => {
+        return (
+          item &&
+          typeof item.id === 'string' &&
+          typeof item.productId === 'number' &&
+          typeof item.name === 'string' &&
+          typeof item.sizeCode === 'string' &&
+          typeof item.cantidad === 'number' &&
+          !isNaN(item.cantidad) &&
+          item.cantidad > 0 &&
+          typeof item.retailPrice === 'number' &&
+          (item.wholesalePrice === null || typeof item.wholesalePrice === 'number') &&
+          typeof item.wholesaleMinimum === 'number'
+        );
+      });
+    } else {
+      cart = [];
+    }
     updateCartUI();
   }
 
@@ -194,7 +231,7 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
               const missing = itemSample.wholesaleMinimum - totalQtyForProd;
               helperHtml += `
                 <div class="text-[10px] text-neutral-400 mt-1 flex justify-between">
-                  <span>• *${itemSample.name}*: faltan <strong class="text-celeste-400">${missing} u.</strong></span>
+                  <span>• *${escapeHtml(itemSample.name)}*: faltan <strong class="text-celeste-400">${missing} u.</strong></span>
                   <span class="text-neutral-500">para precio mayorista</span>
                 </div>
               `;
@@ -257,20 +294,25 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
       const priceLabel = item.qualifies ? 'Mayorista' : 'Minorista';
       const badgeColor = item.qualifies ? 'text-gold-400 bg-gold-500/10 border-gold-500/20' : 'text-neutral-400 bg-neutral-900 border-neutral-800';
 
+      const safeName = escapeHtml(item.name);
+      const safeSizeCode = escapeHtml(item.sizeCode);
+      const safeImagePath = escapeHtml(item.imagePath);
+      const safeId = escapeHtml(item.id);
+
       return `
         <div class="flex items-center space-x-4 bg-neutral-900/50 p-3 rounded-lg border border-neutral-800/80">
           <div class="h-16 w-16 bg-neutral-950 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-850">
             <img 
-              src="${item.imagePath}" 
-              alt="${item.name}" 
+              src="${safeImagePath}" 
+              alt="${safeName}" 
               class="h-full w-full object-contain" 
               onerror="this.onerror=null; this.src='/placeholder.svg';"
             />
           </div>
           <div class="flex-grow min-w-0">
-            <h4 class="text-xs font-bold text-neutral-200 truncate">${item.name}</h4>
+            <h4 class="text-xs font-bold text-neutral-200 truncate">${safeName}</h4>
             <div class="flex items-center space-x-2 mt-0.5">
-              <span class="text-[10px] text-neutral-400">Talle: <strong class="text-gold-400 font-extrabold">${item.sizeCode}</strong></span>
+              <span class="text-[10px] text-neutral-400">Talle: <strong class="text-gold-400 font-extrabold">${safeSizeCode}</strong></span>
               <span class="text-[9px] px-1.5 py-0.2 rounded border ${badgeColor} font-semibold">${priceLabel}</span>
             </div>
             <p class="text-[10px] text-neutral-400 mt-1">
@@ -279,9 +321,9 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
             <div class="flex items-center justify-between mt-2">
               <!-- Selectores de cantidad -->
               <div class="flex items-center space-x-1.5 bg-neutral-950 px-2 py-1 rounded border border-neutral-850">
-                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-minus" data-id="${item.id}">-</button>
+                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-minus" data-id="${safeId}">-</button>
                 <span class="text-xs font-semibold px-1 text-neutral-200">${item.cantidad}</span>
-                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-plus" data-id="${item.id}">+</button>
+                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-plus" data-id="${safeId}">+</button>
               </div>
               <span class="text-xs font-extrabold text-neutral-100">${formattedItemPrice}</span>
             </div>
@@ -293,15 +335,21 @@ const whatsappNumber = process.env.WHATSAPP_NUMBER || '5491100000000';
     // Asignar listeners a los botones de sumar/restar creados dinámicamente
     document.querySelectorAll('.qty-btn-minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const id = e.target.getAttribute('data-id');
-        updateQty(id, -1);
+        const target = e.target;
+        if (target && typeof target.getAttribute === 'function') {
+          const id = target.getAttribute('data-id');
+          if (id) updateQty(id, -1);
+        }
       });
     });
 
     document.querySelectorAll('.qty-btn-plus').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const id = e.target.getAttribute('data-id');
-        updateQty(id, 1);
+        const target = e.target;
+        if (target && typeof target.getAttribute === 'function') {
+          const id = target.getAttribute('data-id');
+          if (id) updateQty(id, 1);
+        }
       });
     });
   }

@@ -68,6 +68,16 @@ function validateConfig() {
 
     const enableUnsafeAdmin = getEnvBoolean('ENABLE_UNSAFE_ADMIN', false);
 
+    // Auth variables validation
+    const authRateLimitPepper = getEnvString('AUTH_RATE_LIMIT_PEPPER', nodeEnv === 'development' ? 'dev-default-pepper-secret-32-chars-long' : '');
+    if (nodeEnv === 'production' && (!authRateLimitPepper || authRateLimitPepper.length < 16)) {
+      throw new Error("Environment variable validation error: AUTH_RATE_LIMIT_PEPPER is required in production and must be at least 16 characters.");
+    }
+    
+    const adminSessionHours = getEnvNumber('ADMIN_SESSION_HOURS', 8);
+    const cookieSecure = getEnvBoolean('COOKIE_SECURE', nodeEnv === 'production');
+    const trustProxy = getEnvBoolean('TRUST_PROXY', false);
+
     return {
       NODE_ENV: nodeEnv,
       DB: {
@@ -82,6 +92,12 @@ function validateConfig() {
       PUBLIC_SITE_URL: publicSiteUrl,
       PUBLIC_WHATSAPP_NUMBER: publicWhatsappNumber,
       ENABLE_UNSAFE_ADMIN: enableUnsafeAdmin,
+      AUTH: {
+        rateLimitPepper: authRateLimitPepper,
+        sessionHours: adminSessionHours,
+        cookieSecure: cookieSecure,
+        trustProxy: trustProxy,
+      }
     };
   } catch (error: any) {
     // Crucial: we don't log DB connection details or passwords in the message.
