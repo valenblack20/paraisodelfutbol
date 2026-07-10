@@ -1,0 +1,320 @@
+<!DOCTYPE html><html lang="es"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="generator" content="Astro v4.16.19"><!-- SEO Meta Tags --><title>Catálogo de Camisetas - El Paraíso del Fútbol | El Paraíso del Fútbol</title><meta name="description" content="El Paraíso del Fútbol - Tu tienda online de camisetas de fútbol en Argentina. Ventas mayoristas y minoristas con envíos a todo el país. Acentos celestes y dorados del campeón."><meta property="og:title" content="Catálogo de Camisetas - El Paraíso del Fútbol | El Paraíso del Fútbol"><meta property="og:description" content="El Paraíso del Fútbol - Tu tienda online de camisetas de fútbol en Argentina. Ventas mayoristas y minoristas con envíos a todo el país. Acentos celestes y dorados del campeón."><meta property="og:type" content="website"><meta property="og:url" content="https://paraisodelfutbol.ar"><meta name="twitter:card" content="summary_large_image"><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><link rel="stylesheet" href="/_astro/admin.DqT6Vn_k.css"><script type="module" src="/_astro/hoisted.Cd6Z33ac.js"></script></head> <body class="bg-neutral-950 text-neutral-100 flex flex-col min-h-screen"> <!-- Navbar principal --> <header class="fixed top-0 left-0 right-0 z-40 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-900"> <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between"> <!-- Logo & Nombre --> <a href="/" class="flex items-center space-x-2 group"> <div class="flex flex-col"> <span class="text-xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-celeste-400 via-white to-celeste-400 group-hover:from-gold-400 group-hover:to-gold-500 transition-all duration-300">
+EL PARAÍSO
+</span> <span class="text-xs font-semibold tracking-widest text-gold-500 flex items-center gap-1">
+DEL FÚTBOL
+<span class="text-[9px] text-white">★★★</span> </span> </div> </a> <!-- Menú Desktop --> <nav class="hidden md:flex items-center space-x-8"> <a href="/" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Inicio</a> <a href="/productos" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Productos</a> <a href="/nosotros" class="text-sm font-medium text-neutral-300 hover:text-celeste-400 transition-colors">Quiénes Somos</a> <a href="/admin" class="text-sm font-medium text-neutral-400 hover:text-gold-400 transition-colors flex items-center gap-1"> <span>Admin Panel</span> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path> </svg> </a> </nav> <!-- Botón Carrito & Menú Mobile --> <div class="flex items-center space-x-4"> <!-- Carrito Trigger --> <button id="cart-trigger" class="relative p-2 text-neutral-300 hover:text-gold-500 hover:scale-105 transition-all duration-200 focus:outline-none" aria-label="Abrir carrito de compras"> <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg> <span id="cart-badge" class="absolute -top-1 -right-1 bg-celeste-500 text-neutral-950 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-neutral-950 scale-0 transition-transform duration-300">
+0
+</span> </button> <!-- Hamburguesa Mobile --> <button id="mobile-menu-btn" class="p-2 md:hidden text-neutral-300 hover:text-celeste-400 focus:outline-none" aria-label="Abrir menú"> <svg id="menu-icon-hamburger" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path> </svg> <svg id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> </div> <!-- Menú Desplegable Mobile --> <div id="mobile-menu" class="hidden md:hidden bg-neutral-950 border-b border-neutral-900 animate-fade-in-up"> <div class="px-4 pt-2 pb-6 space-y-4"> <a href="/" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Inicio</a> <a href="/productos" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Productos</a> <a href="/nosotros" class="block text-base font-semibold text-neutral-200 hover:text-celeste-400 py-2">Quiénes Somos</a> <a href="/admin" class="block text-base font-semibold text-gold-500 hover:text-gold-400 py-2 border-t border-neutral-900">
+Panel Administrador ★★★
+</a> </div> </div> </header>  <!-- Contenedor principal --> <main class="flex-grow pt-20">  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"> <!-- Cabecera del catálogo --> <div class="text-center max-w-3xl mx-auto mb-16 space-y-4"> <div class="inline-flex items-center space-x-1 text-gold-500 text-sm font-semibold uppercase tracking-widest"> <span>Catálogo Oficial</span> <span>★★★</span> </div> <h1 class="text-3xl sm:text-5xl font-extrabold uppercase font-display">
+Nuestras <span class="text-celeste-400">Camisetas</span> </h1> <p class="text-sm text-neutral-400">
+Filtrá por tu categoría preferida y encontrá tu camiseta ideal. Recordá que sumando 6 unidades o más, accedés automáticamente a precios de fábrica en todo el carrito.
+</p> </div> <!-- Botones de Filtro --> <div class="flex flex-wrap justify-center gap-3 mb-12"> <button class="filter-btn bg-gold-500 text-neutral-950 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-gold-500 transition-all duration-300 hover:scale-105 active:scale-95" data-filter="all">
+Todas
+</button> <button class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95" data-filter="Clubes">
+Clubes
+</button> <button class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95" data-filter="Selecciones">
+Selecciones
+</button> <button class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95" data-filter="Nacionales">
+Nacionales
+</button> <button class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95" data-filter="Internacionales">
+Internacionales
+</button> </div> <!-- Mensaje sin productos --> <div id="no-products-msg" class="hidden text-center py-20 text-neutral-500"> <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-neutral-800 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path> </svg> <p class="text-base font-semibold">No se encontraron camisetas en esta categoría.</p> </div> <!-- Grilla de Camisetas --> <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"> <div class="product-item-wrapper" data-category="Selecciones"> <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group product-card neon-glow-argentina" data-id="1" data-nombre="Camiseta Selección Argentina - 3 Estrellas" data-precio-minorista="45000" data-precio-mayorista="32000" data-codigo-foto="arg_home_3stars" data-categoria="Selecciones"> <!-- Contenedor Foto --> <div class="relative aspect-square w-full bg-neutral-950 overflow-hidden flex items-center justify-center"> <img src="/Imagenes/arg_home_3stars.webp" alt="Camiseta Selección Argentina - 3 Estrellas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/600x600/0a0a0a/74ACDF?text=Paraiso+Del+Futbol';"> <!-- Tag Categoría --> <span class="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-[10px] text-celeste-400 font-bold px-2.5 py-1 rounded-full border border-celeste-500/30 uppercase tracking-widest"> Selecciones </span> <!-- Indicador Stock -->  </div> <!-- Detalles de la Camiseta --> <div class="p-5 flex flex-col flex-grow"> <!-- Estrellas Decorativas (3 Estrellas del Campeón con Brillo) --> <div class="flex text-gold-500 space-x-1 mb-2 text-xs select-none" aria-label="3 estrellas de calidad campeón"> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> </div> <!-- Título --> <h3 class="text-base font-bold text-neutral-100 group-hover:text-gold-400 transition-colors line-clamp-1"> Camiseta Selección Argentina - 3 Estrellas </h3> <!-- Descripción breve --> <p class="text-xs text-neutral-400 mt-1 line-clamp-2 h-8 leading-relaxed"> La camiseta oficial del Campeón del Mundo con las tres estrellas doradas y el parche oficial de campeón de la FIFA. </p> <!-- Caja de Precios --> <div class="mt-4 pt-3 border-t border-neutral-800/60 grid grid-cols-2 gap-2"> <div> <p class="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">Minorista</p> <p class="text-base font-extrabold text-neutral-200">$ 45.000</p> </div> <div class="border-l border-neutral-800/80 pl-3"> <p class="text-[10px] text-gold-500 font-semibold uppercase tracking-wider">Mayorista (+6 u.)</p> <p class="text-base font-extrabold text-gold-400">$ 32.000</p> </div> </div> <!-- Botón Agregar --> <div class="mt-5"> <button class="w-full bg-neutral-800 text-neutral-200 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none add-to-cart-btn btn-garra"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg>
+Agregar al Carrito
+</button> </div> </div> </div>  </div><div class="product-item-wrapper" data-category="Clubes"> <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group product-card neon-glow-boca" data-id="2" data-nombre="Camiseta Boca Juniors Titular 2024" data-precio-minorista="42000" data-precio-mayorista="30000" data-codigo-foto="boca_home_24" data-categoria="Clubes"> <!-- Contenedor Foto --> <div class="relative aspect-square w-full bg-neutral-950 overflow-hidden flex items-center justify-center"> <img src="/Imagenes/boca_home_24.webp" alt="Camiseta Boca Juniors Titular 2024" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/600x600/0a0a0a/74ACDF?text=Paraiso+Del+Futbol';"> <!-- Tag Categoría --> <span class="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-[10px] text-celeste-400 font-bold px-2.5 py-1 rounded-full border border-celeste-500/30 uppercase tracking-widest"> Clubes </span> <!-- Indicador Stock -->  </div> <!-- Detalles de la Camiseta --> <div class="p-5 flex flex-col flex-grow"> <!-- Estrellas Decorativas (3 Estrellas del Campeón con Brillo) --> <div class="flex text-gold-500 space-x-1 mb-2 text-xs select-none" aria-label="3 estrellas de calidad campeón"> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> </div> <!-- Título --> <h3 class="text-base font-bold text-neutral-100 group-hover:text-gold-400 transition-colors line-clamp-1"> Camiseta Boca Juniors Titular 2024 </h3> <!-- Descripción breve --> <p class="text-xs text-neutral-400 mt-1 line-clamp-2 h-8 leading-relaxed"> Camiseta titular de Boca Juniors. Sentí la pasión xeneize en tu piel con el diseño tradicional azul y oro. </p> <!-- Caja de Precios --> <div class="mt-4 pt-3 border-t border-neutral-800/60 grid grid-cols-2 gap-2"> <div> <p class="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">Minorista</p> <p class="text-base font-extrabold text-neutral-200">$ 42.000</p> </div> <div class="border-l border-neutral-800/80 pl-3"> <p class="text-[10px] text-gold-500 font-semibold uppercase tracking-wider">Mayorista (+6 u.)</p> <p class="text-base font-extrabold text-gold-400">$ 30.000</p> </div> </div> <!-- Botón Agregar --> <div class="mt-5"> <button class="w-full bg-neutral-800 text-neutral-200 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none add-to-cart-btn btn-garra"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg>
+Agregar al Carrito
+</button> </div> </div> </div>  </div><div class="product-item-wrapper" data-category="Clubes"> <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group product-card neon-glow-river" data-id="3" data-nombre="Camiseta River Plate Titular 2024" data-precio-minorista="42000" data-precio-mayorista="30000" data-codigo-foto="river_home_24" data-categoria="Clubes"> <!-- Contenedor Foto --> <div class="relative aspect-square w-full bg-neutral-950 overflow-hidden flex items-center justify-center"> <img src="/Imagenes/river_home_24.webp" alt="Camiseta River Plate Titular 2024" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/600x600/0a0a0a/74ACDF?text=Paraiso+Del+Futbol';"> <!-- Tag Categoría --> <span class="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-[10px] text-celeste-400 font-bold px-2.5 py-1 rounded-full border border-celeste-500/30 uppercase tracking-widest"> Clubes </span> <!-- Indicador Stock -->  </div> <!-- Detalles de la Camiseta --> <div class="p-5 flex flex-col flex-grow"> <!-- Estrellas Decorativas (3 Estrellas del Campeón con Brillo) --> <div class="flex text-gold-500 space-x-1 mb-2 text-xs select-none" aria-label="3 estrellas de calidad campeón"> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> </div> <!-- Título --> <h3 class="text-base font-bold text-neutral-100 group-hover:text-gold-400 transition-colors line-clamp-1"> Camiseta River Plate Titular 2024 </h3> <!-- Descripción breve --> <p class="text-xs text-neutral-400 mt-1 line-clamp-2 h-8 leading-relaxed"> Camiseta titular de River Plate. La mítica banda roja cruzada con detalles modernos y tecnología de alta respirabilidad. </p> <!-- Caja de Precios --> <div class="mt-4 pt-3 border-t border-neutral-800/60 grid grid-cols-2 gap-2"> <div> <p class="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">Minorista</p> <p class="text-base font-extrabold text-neutral-200">$ 42.000</p> </div> <div class="border-l border-neutral-800/80 pl-3"> <p class="text-[10px] text-gold-500 font-semibold uppercase tracking-wider">Mayorista (+6 u.)</p> <p class="text-base font-extrabold text-gold-400">$ 30.000</p> </div> </div> <!-- Botón Agregar --> <div class="mt-5"> <button class="w-full bg-neutral-800 text-neutral-200 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none add-to-cart-btn btn-garra"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg>
+Agregar al Carrito
+</button> </div> </div> </div>  </div><div class="product-item-wrapper" data-category="Internacionales"> <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group product-card neon-glow-neutral" data-id="4" data-nombre="Camiseta Inter Miami - Messi 10" data-precio-minorista="48000" data-precio-mayorista="35000" data-codigo-foto="inter_miami_messi" data-categoria="Internacionales"> <!-- Contenedor Foto --> <div class="relative aspect-square w-full bg-neutral-950 overflow-hidden flex items-center justify-center"> <img src="/Imagenes/inter_miami_messi.webp" alt="Camiseta Inter Miami - Messi 10" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/600x600/0a0a0a/74ACDF?text=Paraiso+Del+Futbol';"> <!-- Tag Categoría --> <span class="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-[10px] text-celeste-400 font-bold px-2.5 py-1 rounded-full border border-celeste-500/30 uppercase tracking-widest"> Internacionales </span> <!-- Indicador Stock -->  </div> <!-- Detalles de la Camiseta --> <div class="p-5 flex flex-col flex-grow"> <!-- Estrellas Decorativas (3 Estrellas del Campeón con Brillo) --> <div class="flex text-gold-500 space-x-1 mb-2 text-xs select-none" aria-label="3 estrellas de calidad campeón"> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> </div> <!-- Título --> <h3 class="text-base font-bold text-neutral-100 group-hover:text-gold-400 transition-colors line-clamp-1"> Camiseta Inter Miami - Messi 10 </h3> <!-- Descripción breve --> <p class="text-xs text-neutral-400 mt-1 line-clamp-2 h-8 leading-relaxed"> La camiseta rosa de las garzas con el nombre y número del mejor jugador de la historia del fútbol. </p> <!-- Caja de Precios --> <div class="mt-4 pt-3 border-t border-neutral-800/60 grid grid-cols-2 gap-2"> <div> <p class="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">Minorista</p> <p class="text-base font-extrabold text-neutral-200">$ 48.000</p> </div> <div class="border-l border-neutral-800/80 pl-3"> <p class="text-[10px] text-gold-500 font-semibold uppercase tracking-wider">Mayorista (+6 u.)</p> <p class="text-base font-extrabold text-gold-400">$ 35.000</p> </div> </div> <!-- Botón Agregar --> <div class="mt-5"> <button class="w-full bg-neutral-800 text-neutral-200 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none add-to-cart-btn btn-garra"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg>
+Agregar al Carrito
+</button> </div> </div> </div>  </div><div class="product-item-wrapper" data-category="Internacionales"> <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group product-card neon-glow-neutral" data-id="5" data-nombre="Camiseta Real Madrid Titular 2024/25" data-precio-minorista="46000" data-precio-mayorista="33000" data-codigo-foto="real_madrid_titular" data-categoria="Internacionales"> <!-- Contenedor Foto --> <div class="relative aspect-square w-full bg-neutral-950 overflow-hidden flex items-center justify-center"> <img src="/Imagenes/real_madrid_titular.webp" alt="Camiseta Real Madrid Titular 2024/25" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/600x600/0a0a0a/74ACDF?text=Paraiso+Del+Futbol';"> <!-- Tag Categoría --> <span class="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-[10px] text-celeste-400 font-bold px-2.5 py-1 rounded-full border border-celeste-500/30 uppercase tracking-widest"> Internacionales </span> <!-- Indicador Stock -->  </div> <!-- Detalles de la Camiseta --> <div class="p-5 flex flex-col flex-grow"> <!-- Estrellas Decorativas (3 Estrellas del Campeón con Brillo) --> <div class="flex text-gold-500 space-x-1 mb-2 text-xs select-none" aria-label="3 estrellas de calidad campeón"> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> <span class="stars-shimmer font-bold text-sm">★</span> </div> <!-- Título --> <h3 class="text-base font-bold text-neutral-100 group-hover:text-gold-400 transition-colors line-clamp-1"> Camiseta Real Madrid Titular 2024/25 </h3> <!-- Descripción breve --> <p class="text-xs text-neutral-400 mt-1 line-clamp-2 h-8 leading-relaxed"> La clásica camiseta blanca del rey de Europa, con detalles en dorado y la máxima elegancia. </p> <!-- Caja de Precios --> <div class="mt-4 pt-3 border-t border-neutral-800/60 grid grid-cols-2 gap-2"> <div> <p class="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider">Minorista</p> <p class="text-base font-extrabold text-neutral-200">$ 46.000</p> </div> <div class="border-l border-neutral-800/80 pl-3"> <p class="text-[10px] text-gold-500 font-semibold uppercase tracking-wider">Mayorista (+6 u.)</p> <p class="text-base font-extrabold text-gold-400">$ 33.000</p> </div> </div> <!-- Botón Agregar --> <div class="mt-5"> <button class="w-full bg-neutral-800 text-neutral-200 font-bold text-xs py-3 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none add-to-cart-btn btn-garra"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg>
+Agregar al Carrito
+</button> </div> </div> </div>  </div> </div> </section>  </main> <!-- Footer de la página --> <footer class="bg-neutral-950 border-t border-neutral-900 text-neutral-400 py-12 mt-auto"> <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> <div class="grid grid-cols-1 md:grid-cols-3 gap-8"> <!-- Identidad de Marca --> <div class="space-y-4"> <h3 class="text-lg font-bold text-neutral-100 tracking-wider">
+EL PARAÍSO <span class="text-gold-500">DEL FÚTBOL</span> </h3> <p class="text-sm leading-relaxed max-w-sm">
+Llevamos en la piel la pasión más grande del mundo. Camisetas nacionales, internacionales y clubes con envíos a todo el país. ¡Ventas minoristas y mayoristas!
+</p> <div class="text-gold-500 font-bold flex items-center gap-1"> <span>Campeones del Mundo</span> <span>★★★</span> </div> </div> <!-- Links rápidos --> <div class="space-y-4"> <h4 class="text-sm font-semibold text-neutral-200 tracking-widest uppercase">Navegación</h4> <ul class="space-y-2 text-sm"> <li><a href="/" class="hover:text-celeste-400 transition-colors">Inicio</a></li> <li><a href="/productos" class="hover:text-celeste-400 transition-colors">Catálogo de Camisetas</a></li> <li><a href="/nosotros" class="hover:text-celeste-400 transition-colors">Quiénes Somos</a></li> <li><a href="/admin" class="hover:text-gold-400 transition-colors">Panel ABM</a></li> </ul> </div> <!-- Contacto e Información --> <div class="space-y-4"> <h4 class="text-sm font-semibold text-neutral-200 tracking-widest uppercase">Atención al Cliente</h4> <ul class="space-y-2 text-sm"> <li class="flex items-center space-x-2"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-celeste-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path> </svg> <span>Buenos Aires, Argentina (Envíos a todo el país)</span> </li> <li class="flex items-center space-x-2"> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-celeste-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path> </svg> <span>contacto@paraisodelfutbol.ar</span> </li> </ul> </div> </div> <!-- Separador y Copyright --> <div class="border-t border-neutral-900 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs"> <p>&copy; 2026 El Paraíso del Fútbol. Todos los derechos reservados. paraisodelfutbol.ar</p> <p class="mt-2 md:mt-0 flex items-center gap-1">
+Diseñado con pasión futbolera
+<span class="text-red-500">❤️</span>
+en Argentina
+</p> </div> </div> </footer> <!-- Componente del Carrito Lateral --> <!-- Overlay del carrito --><div id="cart-overlay" class="fixed inset-0 z-50 bg-neutral-950/60 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0"> <!-- Sidebar --> <aside id="cart-sidebar" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-neutral-950 border-l border-neutral-800 shadow-2xl flex flex-col translate-x-full transition-transform duration-300 ease-in-out"> <!-- Cabecera --> <div class="p-6 border-b border-neutral-800 flex items-center justify-between"> <div class="flex items-center space-x-2"> <h2 class="text-lg font-bold text-neutral-100 uppercase tracking-wider">Tu Carrito</h2> <span class="text-xs bg-gold-500/20 text-gold-400 font-semibold px-2 py-0.5 rounded border border-gold-500/30">★★★</span> </div> <button id="cart-close" class="text-neutral-400 hover:text-white hover:rotate-90 transition-all duration-300" aria-label="Cerrar carrito"> <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Lista de productos --> <div id="cart-items-container" class="flex-grow overflow-y-auto p-6 space-y-4"> <!-- Los productos se inyectarán aquí dinámicamente con JavaScript --> <div class="text-center py-12 text-neutral-500 flex flex-col items-center justify-center space-y-3"> <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path> </svg> <p class="text-sm">Tu carrito está vacío.</p> <a href="/productos" class="text-xs text-celeste-400 hover:underline">Ir a ver camisetas</a> </div> </div> <!-- Indicador de tipo de compra (Mayorista / Minorista) --> <div id="wholesale-indicator" class="px-6 py-3 bg-neutral-900 border-t border-neutral-800 hidden"> <!-- Inyectado por JS --> </div> <!-- Resumen y Checkout --> <div class="p-6 border-t border-neutral-800 bg-neutral-900/50 space-y-4"> <div class="flex justify-between items-center text-sm"> <span class="text-neutral-400">Total ítems:</span> <span id="cart-total-qty" class="font-bold text-neutral-200">0</span> </div> <div class="flex justify-between items-end"> <span class="text-base font-medium text-neutral-300">Total Estimado:</span> <div class="text-right"> <span id="cart-total-price" class="text-xl font-extrabold text-gold-400">$0</span> </div> </div> <button id="cart-checkout-btn" class="w-full bg-gold-500 hover:bg-gold-400 text-neutral-950 font-extrabold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 tracking-wide transition-all duration-300 shadow-md shadow-gold-500/10 disabled:opacity-40 disabled:pointer-events-none" disabled> <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"> <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path> </svg>
+Finalizar por WhatsApp
+</button> </div> </aside> </div> <script>(function(){const whatsappNumber = "5491100000000";
+
+  // Variables y estado local del carrito
+  let cart = [];
+
+  // Elementos del DOM
+  let overlay, sidebar, container, totalQtyEl, totalPriceEl, checkoutBtn, badgeEl, indicatorEl;
+
+  function initElements() {
+    overlay = document.getElementById('cart-overlay');
+    sidebar = document.getElementById('cart-sidebar');
+    container = document.getElementById('cart-items-container');
+    totalQtyEl = document.getElementById('cart-total-qty');
+    totalPriceEl = document.getElementById('cart-total-price');
+    checkoutBtn = document.getElementById('cart-checkout-btn');
+    indicatorEl = document.getElementById('wholesale-indicator');
+    badgeEl = document.getElementById('cart-badge');
+  }
+
+  // Cargar carrito desde localStorage
+  function loadCart() {
+    const saved = localStorage.getItem('paraiso_cart');
+    cart = saved ? JSON.parse(saved) : [];
+    updateCartUI();
+  }
+
+  // Guardar carrito en localStorage
+  function saveCart() {
+    localStorage.setItem('paraiso_cart', JSON.stringify(cart));
+    updateCartUI();
+  }
+
+  // Comprobar si califica para compra mayorista (6 o más camisetas en total)
+  function isWholesale() {
+    const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
+    return totalQty >= 6;
+  }
+
+  // Actualizar la interfaz del carrito
+  function updateCartUI() {
+    if (!container) return;
+
+    // Calcular totales
+    const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
+    const wholesaleActive = totalQty >= 6;
+    
+    let totalPrice = 0;
+    cart.forEach(item => {
+      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
+      totalPrice += price * item.cantidad;
+    });
+
+    // Actualizar badges e indicadores
+    if (badgeEl) {
+      badgeEl.innerText = totalQty;
+      if (totalQty > 0) {
+        badgeEl.classList.remove('scale-0');
+        badgeEl.classList.add('scale-100');
+      } else {
+        badgeEl.classList.remove('scale-100');
+        badgeEl.classList.add('scale-0');
+      }
+    }
+
+    if (totalQtyEl) totalQtyEl.innerText = totalQty;
+    if (totalPriceEl) {
+      totalPriceEl.innerText = new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0
+      }).format(totalPrice);
+    }
+
+    // Configurar el indicador de compra mayorista
+    if (indicatorEl) {
+      if (totalQty > 0) {
+        indicatorEl.classList.remove('hidden');
+        if (wholesaleActive) {
+          indicatorEl.innerHTML = `
+            <div class="flex items-center justify-between text-xs text-gold-400 font-bold">
+              <span>🔥 ¡PRECIO MAYORISTA ACTIVADO!</span>
+              <span>Ahorro aplicado (+6 u.)</span>
+            </div>
+          `;
+        } else {
+          const faltantes = 6 - totalQty;
+          indicatorEl.innerHTML = `
+            <div class="flex items-center justify-between text-xs text-neutral-400">
+              <span>Agrega <strong class="text-celeste-400">${faltantes}</strong> más para precio mayorista</span>
+              <span class="text-[10px] text-neutral-500">Min. 6 unidades</span>
+            </div>
+          `;
+        }
+      } else {
+        indicatorEl.classList.add('hidden');
+      }
+    }
+
+    if (checkoutBtn) {
+      checkoutBtn.disabled = cart.length === 0;
+    }
+
+    // Renderizar items
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12 text-neutral-500 flex flex-col items-center justify-center space-y-3 h-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-neutral-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <p class="text-sm">Tu carrito está vacío.</p>
+          <a href="/productos" class="text-xs text-celeste-400 hover:underline">Ir a ver catálogo</a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = cart.map(item => {
+      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
+      const formattedItemPrice = new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0
+      }).format(price * item.cantidad);
+
+      return `
+        <div class="flex items-center space-x-4 bg-neutral-900/50 p-3 rounded-lg border border-neutral-800/80">
+          <div class="h-16 w-16 bg-neutral-950 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-850">
+            <img 
+              src="/Imagenes/${item.codigoFoto}.webp" 
+              alt="${item.nombre}" 
+              class="h-full w-full object-cover" 
+              onerror="this.onerror=null; this.src='https://placehold.co/100x100/0a0a0a/74ACDF?text=Jersey';"
+            />
+          </div>
+          <div class="flex-grow min-w-0">
+            <h4 class="text-xs font-bold text-neutral-200 truncate">${item.nombre}</h4>
+            <p class="text-[10px] text-neutral-400 mt-0.5">
+              ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price)} c/u
+            </p>
+            <div class="flex items-center justify-between mt-2">
+              <!-- Selectores de cantidad -->
+              <div class="flex items-center space-x-1.5 bg-neutral-950 px-2 py-1 rounded border border-neutral-850">
+                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-minus" data-id="${item.id}">-</button>
+                <span class="text-xs font-semibold px-1 text-neutral-200">${item.cantidad}</span>
+                <button class="text-neutral-400 hover:text-white text-xs font-bold px-1 qty-btn-plus" data-id="${item.id}">+</button>
+              </div>
+              <span class="text-xs font-extrabold text-neutral-100">${formattedItemPrice}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Asignar listeners a los botones de sumar/restar creados dinámicamente
+    document.querySelectorAll('.qty-btn-minus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        updateQty(id, -1);
+      });
+    });
+
+    document.querySelectorAll('.qty-btn-plus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        updateQty(id, 1);
+      });
+    });
+  }
+
+  // Modificar cantidad de un ítem
+  function updateQty(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+
+    item.cantidad += delta;
+    if (item.cantidad <= 0) {
+      cart = cart.filter(i => i.id !== id);
+    }
+    saveCart();
+  }
+
+  // Abrir / Cerrar el carrito
+  function openCart() {
+    if (!overlay || !sidebar) return;
+    overlay.classList.remove('hidden');
+    setTimeout(() => {
+      overlay.classList.add('opacity-100');
+      sidebar.classList.remove('translate-x-full');
+    }, 10);
+  }
+
+  function closeCart() {
+    if (!overlay || !sidebar) return;
+    overlay.classList.remove('opacity-100');
+    sidebar.classList.add('translate-x-full');
+    setTimeout(() => {
+      overlay.classList.add('hidden');
+    }, 300);
+  }
+
+  // Enviar pedido a WhatsApp
+  function checkout() {
+    const totalQty = cart.reduce((sum, item) => sum + item.cantidad, 0);
+    const wholesaleActive = totalQty >= 6;
+    
+    let totalPrice = 0;
+    let listText = '';
+    
+    cart.forEach(item => {
+      const price = wholesaleActive ? item.precioMayorista : item.precioMinorista;
+      const subtotal = price * item.cantidad;
+      totalPrice += subtotal;
+      
+      listText += `• *${item.nombre}* x${item.cantidad} _($${new Intl.NumberFormat('es-AR').format(price)} c/u)_\n`;
+    });
+
+    const tipoCompra = wholesaleActive ? 'Mayorista 🔥' : 'Minorista';
+    const totalFormatted = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(totalPrice);
+    
+    const message = 
+`⚽ *NUEVO PEDIDO - EL PARAÍSO DEL FÚTBOL* ⚽
+------------------------------------------
+Hola! Me gustaría encargar las siguientes camisetas:
+
+${listText}
+------------------------------------------
+🛍️ *Tipo de Compra:* ${tipoCompra}
+📦 *Cantidad total:* ${totalQty} productos
+💰 *Total del pedido:* ${totalFormatted}
+
+_Quedo a la espera para coordinar el pago y envío!_`;
+
+    const encodedText = encodeURIComponent(message);
+    const url = `https://wa.me/${whatsappNumber}?text=${encodedText}`;
+    
+    // Abrir enlace de WhatsApp en pestaña nueva
+    window.open(url, '_blank');
+  }
+
+  // Inicializar eventos en la carga del script de Astro
+  document.addEventListener('astro:page-load', () => {
+    initElements();
+    loadCart();
+
+    // Listener para abrir carrito
+    const trigger = document.getElementById('cart-trigger');
+    if (trigger) trigger.addEventListener('click', openCart);
+
+    // Listener para cerrar carrito
+    const closeBtn = document.getElementById('cart-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeCart);
+    if (overlay) overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeCart();
+    });
+
+    // Listener para agregar items desde otros componentes
+    document.addEventListener('add-to-cart', (e) => {
+      const newItem = e.detail;
+      const existing = cart.find(i => i.id === newItem.id);
+
+      if (existing) {
+        existing.cantidad += 1;
+      } else {
+        cart.push(newItem);
+      }
+      saveCart();
+      openCart(); // Abrir sidebar automáticamente al añadir un item
+    });
+
+    // Responder a solicitudes de actualización
+    document.addEventListener('request-cart-update', () => {
+      updateCartUI();
+    });
+
+    // Checkout
+    if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
+  });
+})();</script> <!-- Botón flotante de WhatsApp --> <a href="https://wa.me/5491100000000?text=%C2%A1Hola!%20Me%20gustar%C3%ADa%20hacer%20una%20consulta%20sobre%20las%20camisetas%20de%20f%C3%BAtbol." target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-30 bg-emerald-500 hover:bg-emerald-400 text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group flex items-center justify-center" aria-label="Contactar por WhatsApp"> <!-- Efecto de pulso en el fondo --> <span class="absolute inset-0 rounded-full bg-emerald-500/40 animate-ping group-hover:animate-none"></span> <!-- Icono de WhatsApp --> <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 relative z-10" viewBox="0 0 24 24" fill="currentColor"> <path fill-rule="evenodd" d="M1.5 10.5a8.94 8.94 0 011.66-5.185l-1.15-3.45a.75.75 0 01.947-.947l3.45 1.15A8.942 8.942 0 0110.5 1.5c5.247 0 9.5 4.253 9.5 9.5 0 5.247-4.253 9.5-9.5 9.5-1.802 0-3.486-.502-4.922-1.375l-4.14 1.38a.75.75 0 01-.947-.947l1.38-4.14A8.942 8.942 0 011.5 10.5zm9 5.5c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" clip-rule="evenodd"></path> <path d="M12.012 6.012c-.228-.48-.48-.488-.703-.497-.18-.008-.388-.008-.596-.008a1.2 1.2 0 00-.87.408c-.3.33-1.148 1.122-1.148 2.73 0 1.61 1.173 3.167 1.334 3.385.165.218 2.308 3.525 5.59 4.95 2.73 1.185 3.285.952 3.885.892.6-.06 1.935-.79 2.205-1.553.27-.765.27-1.425.188-1.56-.082-.135-.3-.218-.63-.383-.33-.165-1.935-.953-2.235-1.065-.3-.113-.518-.165-.735.165-.218.33-.84 1.065-1.028 1.283-.187.217-.375.24-.705.075-.33-.165-1.395-.51-2.655-1.635-1-.892-1.673-1.995-1.87-2.332-.195-.338-.022-.52.143-.685.15-.143.33-.383.495-.578.165-.195.218-.33.33-.548.113-.218.06-.405-.03-.57-.083-.165-.705-1.7-.975-2.355z"></path> </svg> <!-- Tooltip flotante al hacer hover --> <span class="absolute right-16 bg-neutral-900 text-neutral-100 text-xs font-semibold px-3 py-1.5 rounded-lg border border-neutral-800 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-xl">
+¿Tenés dudas? Escribinos!
+</span> </a>  </body> </html> 

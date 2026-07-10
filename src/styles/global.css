@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +7,13 @@
 @layer base {
   body {
     @apply bg-neutral-950 text-neutral-100 font-sans antialiased overflow-x-hidden selection:bg-celeste-500 selection:text-neutral-950;
+    /* Stadium reflector top light and concrete/mesh texture overlay */
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.12) 0%, rgba(116, 172, 223, 0.05) 30%, rgba(212, 175, 55, 0.01) 50%, transparent 80%),
+      linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+    background-attachment: fixed;
   }
 }
 
@@ -29,18 +36,87 @@
   background: #D4AF37;
 }
 
+/* Tipografía de display para títulos */
+.font-display {
+  font-family: 'Montserrat', 'Outfit', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
 /* Animaciones personalizadas */
 .stars-shimmer {
-  background: linear-gradient(90deg, #D4AF37 0%, #FFF 50%, #D4AF37 100%);
+  background: linear-gradient(90deg, #D4AF37 0%, #FFFFFF 35%, #D4AF37 70%, #FFFFFF 100%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: shimmer 3s linear infinite;
+  animation: shine 4s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-  to {
+@keyframes shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
     background-position: 200% center;
   }
 }
+
+/* Efectos de neón en tarjetas según club */
+.neon-glow-boca {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neon-glow-boca:hover {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 0 12px rgba(62, 122, 191, 0.15);
+  transform: translateY(-4px);
+}
+
+.neon-glow-river {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neon-glow-river:hover {
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 20px rgba(225, 29, 72, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+}
+
+.neon-glow-argentina {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neon-glow-argentina:hover {
+  border-color: #74ACDF !important;
+  box-shadow: 0 0 20px rgba(116, 172, 223, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+}
+
+.neon-glow-neutral {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neon-glow-neutral:hover {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  transform: translateY(-4px);
+}
+
+/* Separadores de sección patrios */
+.separator-patrio {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #74ACDF 25%, #FFFFFF 50%, #74ACDF 75%, transparent 100%);
+  border: none;
+  width: 100%;
+  margin: 3rem 0;
+  opacity: 0.8;
+}
+
+/* Botón Agregar al Carrito con Garra */
+.btn-garra {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-garra:hover:not(:disabled) {
+  transform: scale(1.04);
+  background: linear-gradient(135deg, #74ACDF 0%, #FFFFFF 50%, #D4AF37 100%) !important;
+  color: #0a0a0a !important;
+  box-shadow: 0 0 20px rgba(116, 172, 223, 0.5);
+}
+

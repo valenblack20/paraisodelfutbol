@@ -24,15 +24,18 @@ try {
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-celeste-500/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="bottom-0 right-1/4 w-96 h-96 bg-gold-500/5 rounded-full blur-[150px] pointer-events-none"></div>
 
+    <!-- Contenedor de Confeti (Papelitos) -->
+    <div id="hero-confetti" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+
     <!-- Contenido del Hero -->
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
       <!-- Tres estrellas del Campeón -->
-      <div class="flex justify-center text-gold-400 text-3xl sm:text-4xl md:text-5xl gap-2 mb-6 animate-pulse select-none">
-        <span>★</span><span class="scale-125 -translate-y-1.5">★</span><span>★</span>
+      <div class="flex justify-center text-gold-400 text-3xl sm:text-4xl md:text-5xl gap-2 mb-6 select-none">
+        <span class="stars-shimmer">★</span><span class="stars-shimmer scale-125 -translate-y-1.5">★</span><span class="stars-shimmer">★</span>
       </div>
 
       <!-- Título Principal -->
-      <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight uppercase leading-none max-w-4xl">
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight uppercase leading-none max-w-4xl font-display">
         <span class="text-neutral-100 block">Vesti la pasión del</span>
         <span class="text-transparent bg-clip-text bg-gradient-to-r from-celeste-400 via-white to-gold-400 block mt-2">
           Campeón del Mundo
@@ -63,15 +66,15 @@ try {
       <!-- Detalle Visual de Copa / Selección -->
       <div class="mt-16 border-t border-neutral-900 pt-8 w-full max-w-4xl grid grid-cols-3 gap-4 text-center">
         <div>
-          <span class="block text-2xl md:text-3xl font-extrabold text-celeste-400">100%</span>
+          <span class="block text-2xl md:text-3xl font-extrabold text-celeste-400 font-display">100%</span>
           <span class="text-[10px] uppercase text-neutral-500 font-bold tracking-widest mt-1 block">Calidad Premium</span>
         </div>
         <div class="border-x border-neutral-900">
-          <span class="block text-2xl md:text-3xl font-extrabold text-gold-400">+6 U.</span>
+          <span class="block text-2xl md:text-3xl font-extrabold text-gold-400 font-display">+6 U.</span>
           <span class="text-[10px] uppercase text-neutral-500 font-bold tracking-widest mt-1 block">Precio Mayorista</span>
         </div>
         <div>
-          <span class="block text-2xl md:text-3xl font-extrabold text-celeste-400">Envíos</span>
+          <span class="block text-2xl md:text-3xl font-extrabold text-celeste-400 font-display">Envíos</span>
           <span class="text-[10px] uppercase text-neutral-500 font-bold tracking-widest mt-1 block">Todo el País</span>
         </div>
       </div>
@@ -98,11 +101,11 @@ try {
   </section>
 
   <!-- SECCIÓN "LAS MÁS BUSCADAS" -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="flex flex-col md:flex-row justify-between items-end mb-12">
       <div>
         <span class="text-xs text-celeste-400 font-bold tracking-widest uppercase">Camisetas Destacadas</span>
-        <h2 class="text-3xl font-extrabold uppercase mt-2">
+        <h2 class="text-3xl font-extrabold uppercase mt-2 font-display">
           Las Más <span class="text-gold-500">Buscadas</span>
         </h2>
       </div>
@@ -132,8 +135,13 @@ try {
     </div>
   </section>
 
+  <!-- Separador Patrio de Sección -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <hr class="separator-patrio" />
+  </div>
+
   <!-- SECCIÓN BANNER PUBLICITARIO / RIVALES -->
-  <section class="bg-neutral-900/60 border-t border-neutral-900 py-20 relative overflow-hidden">
+  <section class="bg-neutral-900/60 py-16 relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       
       <!-- Lado Texto -->
@@ -142,7 +150,7 @@ try {
           <span>Colección Especial</span>
           <span>★★★</span>
         </div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold uppercase leading-tight">
+        <h2 class="text-3xl sm:text-4xl font-extrabold uppercase leading-tight font-display">
           ¿Listo para lucir los colores de la gloria eterna?
         </h2>
         <p class="text-sm text-neutral-400 leading-relaxed">
@@ -163,7 +171,7 @@ try {
         <!-- Fondo de Muestra -->
         <div class="absolute inset-0 bg-gradient-to-tr from-neutral-950 via-neutral-900/50 to-celeste-950/20"></div>
         <div class="relative z-10 text-center space-y-4 max-w-sm">
-          <span class="text-gold-500 text-3xl font-extrabold block">EL TEMPLO DEL HINCHA</span>
+          <span class="text-gold-500 text-3xl font-extrabold block font-display">EL TEMPLO DEL HINCHA</span>
           <p class="text-xs text-neutral-400 leading-relaxed">
             Hacemos que comprar tu camiseta sea tan simple como gritar un gol. Recibila en tu casa en 72hs hábiles.
           </p>
@@ -174,3 +182,51 @@ try {
   </section>
 
 </Layout>
+
+<script>
+  // Generación dinámica de papelitos (confeti) flotando lentamente en el Hero
+  const setupConfetti = () => {
+    const container = document.getElementById('hero-confetti');
+    if (!container) return;
+    container.innerHTML = '';
+    const colors = ['#74ACDF', '#FFFFFF', '#D4AF37'];
+    for (let i = 0; i < 35; i++) {
+      const confetti = document.createElement('div');
+      confetti.style.position = 'absolute';
+      confetti.style.width = `${Math.random() * 8 + 4}px`;
+      confetti.style.height = `${Math.random() * 12 + 6}px`;
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = `${Math.random() * 100}%`;
+      confetti.style.top = `-${Math.random() * 20 + 20}px`;
+      confetti.style.opacity = (Math.random() * 0.6 + 0.3).toString();
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      
+      const duration = Math.random() * 7 + 5;
+      const delay = Math.random() * 5;
+      
+      confetti.style.animation = `fall ${duration}s linear infinite`;
+      confetti.style.animationDelay = `${delay}s`;
+      
+      container.appendChild(confetti);
+    }
+  };
+
+  document.addEventListener('astro:page-load', setupConfetti);
+</script>
+
+<style is:global>
+  @keyframes fall {
+    0% {
+      transform: translateY(0) rotate(0deg) translateX(0);
+    }
+    35% {
+      transform: translateY(30vh) rotate(120deg) translateX(15px);
+    }
+    70% {
+      transform: translateY(60vh) rotate(240deg) translateX(-15px);
+    }
+    100% {
+      transform: translateY(95vh) rotate(360deg) translateX(5px);
+    }
+  }
+</style>
