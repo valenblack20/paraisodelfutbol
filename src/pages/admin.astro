@@ -1,75 +1,18 @@
 ---
+// admin.astro — Versión estática (GitHub Pages)
+// Toda la lógica ABM se maneja en el cliente con localStorage.
+// Para conectar a MySQL real, hacer deploy en un servidor con SSR (VPS / Railway / Render).
 import Layout from '../layouts/Layout.astro';
-import { query } from '../lib/db.js';
 
-// Desactivamos prerender en la página de administración para soportar el dinamismo de ABM
-export const prerender = false;
-
-let errorMsg = '';
-let successMsg = '';
-
-// Procesar acciones de formulario POST
-if (Astro.request.method === 'POST') {
-  try {
-    const data = await Astro.request.formData();
-    const action = data.get('action');
-    const id = data.get('id') ? parseInt(data.get('id').toString()) : null;
-    const nombre = data.get('nombre')?.toString().trim();
-    const descripcion = data.get('descripcion')?.toString().trim();
-    const precio_minorista = parseFloat(data.get('precio_minorista')?.toString() || '0');
-    const precio_mayorista = parseFloat(data.get('precio_mayorista')?.toString() || '0');
-    const categoria = data.get('categoria')?.toString();
-    const stock = parseInt(data.get('stock')?.toString() || '0');
-    const codigo_foto = data.get('codigo_foto')?.toString().trim();
-
-    if (action === 'guardar') {
-      if (!nombre || !codigo_foto || isNaN(precio_minorista) || isNaN(precio_mayorista)) {
-        errorMsg = 'Por favor, completa todos los campos requeridos correctamente.';
-      } else {
-        if (id) {
-          // MODIFICACIÓN
-          await query(
-            'UPDATE camisetas SET codigo_foto=?, nombre=?, descripcion=?, precio_minorista=?, precio_mayorista=?, categoria=?, stock=? WHERE id=?',
-            [codigo_foto, nombre, descripcion, precio_minorista, precio_mayorista, categoria, stock, id]
-          );
-          successMsg = 'Camiseta actualizada correctamente.';
-        } else {
-          // ALTA
-          await query(
-            'INSERT INTO camisetas (codigo_foto, nombre, descripcion, precio_minorista, precio_mayorista, categoria, stock) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [codigo_foto, nombre, descripcion, precio_minorista, precio_mayorista, categoria, stock]
-          );
-          successMsg = 'Nueva camiseta añadida con éxito.';
-        }
-      }
-    } else if (action === 'eliminar') {
-      if (id) {
-        // BAJA
-        await query('DELETE FROM camisetas WHERE id = ?', [id]);
-        successMsg = 'Camiseta eliminada correctamente.';
-      }
-    }
-  } catch (err: any) {
-    console.error('Error procesando ABM:', err);
-    errorMsg = `Error al procesar la solicitud: ${err.message}`;
-  }
-}
-
-// Obtener la lista actualizada de camisetas
-let camisetasList = [];
-try {
-  camisetasList = await query('SELECT * FROM camisetas ORDER BY id DESC');
-} catch (e) {
-  console.error('Error cargando lista de camisetas para admin:', e);
-}
+// En modo estático siempre prerender = true (implícito, no necesita declararse)
 ---
 
 <Layout title="Dashboard Admin ABM - El Paraíso del Fútbol">
-  
+
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    
+
     <!-- Cabecera Admin -->
-    <div class="border-b border-neutral-900 pb-8 mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="border-b border-neutral-900 pb-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <div class="flex items-center gap-2 text-gold-500 font-bold text-xs uppercase tracking-widest">
           <span>Panel de Gestión Privado</span>
@@ -77,54 +20,61 @@ try {
         </div>
         <h1 class="text-3xl font-extrabold uppercase mt-2">Administración de Camisetas</h1>
       </div>
-      <div class="bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-2 text-xs text-neutral-400">
-        Base de Datos: <strong class="text-celeste-400">Conectada / Mock Activo</strong>
+      <div class="flex items-center gap-3">
+        <span id="db-badge" class="bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-2 text-xs text-celeste-400 font-bold">
+          💾 localStorage activo
+        </span>
+        <button
+          id="export-btn"
+          class="bg-neutral-800 hover:bg-gold-500 hover:text-neutral-950 text-neutral-300 text-xs font-bold px-4 py-2 rounded-lg border border-neutral-700 transition-all duration-200"
+          title="Exportar listado como JSON para importar en MySQL"
+        >
+          Exportar JSON
+        </button>
       </div>
     </div>
 
-    <!-- Mensajes de Feedback -->
-    {successMsg && (
-      <div class="mb-8 p-4 bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-sm rounded-lg flex items-center gap-2">
-        <span>✓</span> {successMsg}
-      </div>
-    )}
-    {errorMsg && (
-      <div class="mb-8 p-4 bg-red-950/60 border border-red-500/30 text-red-400 text-sm rounded-lg flex items-center gap-2">
-        <span>⚠</span> {errorMsg}
-      </div>
-    )}
+    <!-- Banner informativo -->
+    <div class="mb-8 p-4 bg-celeste-950/30 border border-celeste-500/20 rounded-lg text-xs text-celeste-300 leading-relaxed">
+      <strong class="text-celeste-400">ℹ️ Modo GitHub Pages:</strong> Los cambios se guardan en <code class="bg-neutral-950 px-1 rounded text-celeste-400">localStorage</code> de este navegador. 
+      Usá el botón <strong>Exportar JSON</strong> para descargar los datos e importarlos a tu base de datos MySQL cuando hagas el deploy en un servidor real.
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-      
+    <!-- Mensajes de Feedback -->
+    <div id="success-msg" class="hidden mb-6 p-4 bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-sm rounded-lg flex items-center gap-2">
+      <span>✓</span> <span id="success-text"></span>
+    </div>
+    <div id="error-msg" class="hidden mb-6 p-4 bg-red-950/60 border border-red-500/30 text-red-400 text-sm rounded-lg flex items-center gap-2">
+      <span>⚠</span> <span id="error-text"></span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
       <!-- COLUMNA 1: Formulario Alta/Modificación -->
       <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-xl h-fit">
         <h2 id="form-title" class="text-lg font-bold uppercase text-neutral-100 border-b border-neutral-800 pb-3 mb-6">
           Añadir Camiseta
         </h2>
-        
-        <form method="POST" class="space-y-4" id="abm-form">
-          <!-- Campo oculto para ID si es una modificación -->
-          <input type="hidden" name="id" id="jersey-id" value="" />
-          <input type="hidden" name="action" id="form-action" value="guardar" />
+
+        <form id="abm-form" class="space-y-4">
+          <input type="hidden" id="jersey-id" value="" />
 
           <div>
             <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Nombre del Producto *</label>
-            <input 
-              type="text" 
-              name="nombre" 
-              id="jersey-nombre" 
-              required 
+            <input
+              type="text"
+              id="jersey-nombre"
+              required
               placeholder="Ej: Camiseta Selección Argentina - 3 Estrellas"
               class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Descripción del Producto</label>
-            <textarea 
-              name="descripcion" 
-              id="jersey-descripcion" 
-              rows="3" 
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Descripción</label>
+            <textarea
+              id="jersey-descripcion"
+              rows="3"
               placeholder="Detalles sobre la tela, escudo, parches..."
               class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
             ></textarea>
@@ -133,24 +83,22 @@ try {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">P. Minorista ($) *</label>
-              <input 
-                type="number" 
-                name="precio_minorista" 
-                id="jersey-precio-minorista" 
-                required 
-                step="0.01" 
+              <input
+                type="number"
+                id="jersey-precio-minorista"
+                required
+                step="0.01"
                 placeholder="45000"
                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
               />
             </div>
             <div>
               <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">P. Mayorista ($) *</label>
-              <input 
-                type="number" 
-                name="precio_mayorista" 
-                id="jersey-precio-mayorista" 
-                required 
-                step="0.01" 
+              <input
+                type="number"
+                id="jersey-precio-mayorista"
+                required
+                step="0.01"
                 placeholder="32000"
                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
               />
@@ -160,9 +108,8 @@ try {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Categoría *</label>
-              <select 
-                name="categoria" 
-                id="jersey-categoria" 
+              <select
+                id="jersey-categoria"
                 required
                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
               >
@@ -173,12 +120,11 @@ try {
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Stock disponible</label>
-              <input 
-                type="number" 
-                name="stock" 
-                id="jersey-stock" 
-                value="0" 
+              <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Stock</label>
+              <input
+                type="number"
+                id="jersey-stock"
+                value="0"
                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
               />
             </div>
@@ -186,29 +132,27 @@ try {
 
           <div>
             <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Código de Foto *</label>
-            <input 
-              type="text" 
-              name="codigo_foto" 
-              id="jersey-codigo-foto" 
-              required 
-              placeholder="Ej: arg_home_3stars (sin extensión)"
+            <input
+              type="text"
+              id="jersey-codigo-foto"
+              required
+              placeholder="Ej: arg_home_3stars (sin extensión .webp)"
               class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-celeste-500"
             />
-            <p class="text-[10px] text-neutral-500 mt-1">Nombre exacto de la foto dentro de la carpeta /public/Imagenes/ (.webp)</p>
+            <p class="text-[10px] text-neutral-500 mt-1">Nombre del archivo en /public/Imagenes/ sin extensión</p>
           </div>
 
-          <!-- Botones Formulario -->
           <div class="pt-4 flex gap-2">
-            <button 
-              type="submit" 
-              class="flex-grow bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all duration-300"
+            <button
+              type="submit"
               id="submit-btn"
+              class="flex-grow bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all duration-300"
             >
               Guardar Camiseta
             </button>
-            <button 
-              type="button" 
-              id="cancel-edit-btn" 
+            <button
+              type="button"
+              id="cancel-edit-btn"
               class="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all duration-300 hidden"
             >
               Cancelar
@@ -220,10 +164,9 @@ try {
       <!-- COLUMNA 2-3: Tabla Listado de Camisetas -->
       <div class="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-xl overflow-hidden flex flex-col">
         <h2 class="text-lg font-bold uppercase text-neutral-100 border-b border-neutral-800 pb-3 mb-6">
-          Camisetas en Sistema ({camisetasList.length})
+          Camisetas en Sistema (<span id="total-count">0</span>)
         </h2>
 
-        <!-- Tabla Responsive -->
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
@@ -235,87 +178,15 @@ try {
                 <th class="py-3 px-2 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-800/50">
-              {camisetasList.map((camiseta) => (
-                <tr class="hover:bg-neutral-850/50 transition-colors">
-                  <!-- Foto Código -->
-                  <td class="py-4 px-2 flex items-center space-x-3">
-                    <div class="h-10 w-10 bg-neutral-950 rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-neutral-800">
-                      <img 
-                        src={`/Imagenes/${camiseta.codigo_foto}.webp`} 
-                        alt={camiseta.nombre} 
-                        class="h-full w-full object-cover" 
-                        onerror="this.onerror=null; this.src='https://placehold.co/100x100/0a0a0a/74ACDF?text=Jersey';"
-                      />
-                    </div>
-                    <code class="text-[10px] text-celeste-400 font-mono">{camiseta.codigo_foto}</code>
-                  </td>
-                  
-                  <!-- Nombre / Categoria -->
-                  <td class="py-4 px-2">
-                    <p class="font-bold text-neutral-200">{camiseta.nombre}</p>
-                    <span class="inline-block mt-0.5 text-[9px] font-bold text-neutral-500 uppercase bg-neutral-950 px-1.5 py-0.5 rounded">
-                      {camiseta.categoria}
-                    </span>
-                  </td>
-
-                  <!-- Precios minorista / mayorista -->
-                  <td class="py-4 px-2 space-y-0.5">
-                    <p class="text-neutral-300">Min: <strong class="text-neutral-100">${Number(camiseta.precio_minorista)}</strong></p>
-                    <p class="text-gold-500">May: <strong class="text-gold-400">${Number(camiseta.precio_mayorista)}</strong></p>
-                  </td>
-
-                  <!-- Stock -->
-                  <td class="py-4 px-2 text-center">
-                    <span class={`font-bold px-2 py-0.5 rounded text-[10px] ${camiseta.stock > 10 ? 'text-emerald-400 bg-emerald-950/20' : camiseta.stock > 0 ? 'text-amber-400 bg-amber-950/20' : 'text-red-400 bg-red-950/20'}`}>
-                      {camiseta.stock} u.
-                    </span>
-                  </td>
-
-                  <!-- Acciones (Editar / Eliminar) -->
-                  <td class="py-4 px-2 text-right">
-                    <div class="inline-flex gap-2">
-                      <button 
-                        class="bg-neutral-800 hover:bg-celeste-500 hover:text-neutral-950 text-neutral-300 p-1.5 rounded transition-all duration-200 edit-btn"
-                        data-id={camiseta.id}
-                        data-nombre={camiseta.nombre}
-                        data-descripcion={camiseta.descripcion}
-                        data-precio-minorista={camiseta.precio_minorista}
-                        data-precio-mayorista={camiseta.precio_mayorista}
-                        data-categoria={camiseta.categoria}
-                        data-stock={camiseta.stock}
-                        data-codigo-foto={camiseta.codigo_foto}
-                        title="Editar camiseta"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-
-                      <form method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta camiseta? Esta acción es irreversible.');">
-                        <input type="hidden" name="id" value={camiseta.id} />
-                        <input type="hidden" name="action" value="eliminar" />
-                        <button 
-                          type="submit"
-                          class="bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-400 p-1.5 rounded transition-all duration-200"
-                          title="Eliminar camiseta"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            <tbody id="camisetas-tbody" class="divide-y divide-neutral-800/50">
+              <!-- Filas renderizadas por JavaScript -->
             </tbody>
           </table>
         </div>
-        
-        {camisetasList.length === 0 && (
-          <p class="text-center py-8 text-neutral-500">No hay camisetas cargadas en la base de datos.</p>
-        )}
+
+        <div id="empty-state" class="hidden text-center py-8 text-neutral-500">
+          No hay camisetas cargadas. ¡Añadí la primera!
+        </div>
       </div>
 
     </div>
@@ -324,65 +195,240 @@ try {
 </Layout>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
-    const editButtons = document.querySelectorAll('.edit-btn');
-    const formTitle = document.getElementById('form-title');
-    const submitBtn = document.getElementById('submit-btn');
-    const cancelBtn = document.getElementById('cancel-edit-btn');
+  // ──────────────────────────────────────────────
+  // ABM ADMIN — 100% client-side con localStorage
+  // ──────────────────────────────────────────────
 
-    // Elementos del Formulario
-    const idInput = document.getElementById('jersey-id') as HTMLInputElement;
-    const nombreInput = document.getElementById('jersey-nombre') as HTMLInputElement;
-    const descripcionInput = document.getElementById('jersey-descripcion') as HTMLTextAreaElement;
-    const precioMinInput = document.getElementById('jersey-precio-minorista') as HTMLInputElement;
-    const precioMayInput = document.getElementById('jersey-precio-mayorista') as HTMLInputElement;
-    const categoriaSelect = document.getElementById('jersey-categoria') as HTMLSelectElement;
-    const stockInput = document.getElementById('jersey-stock') as HTMLInputElement;
-    const fotoInput = document.getElementById('jersey-codigo-foto') as HTMLInputElement;
+  const STORAGE_KEY = 'paraiso_admin_camisetas';
 
-    editButtons.forEach(btn => {
+  // Seed inicial con los 5 productos de muestra
+  const SEED_DATA = [
+    { id: 1, codigo_foto: 'arg_home_3stars',    nombre: 'Camiseta Selección Argentina - 3 Estrellas', descripcion: 'La camiseta oficial del Campeón del Mundo.', precio_minorista: 45000, precio_mayorista: 32000, categoria: 'Selecciones',     stock: 50 },
+    { id: 2, codigo_foto: 'boca_home_24',        nombre: 'Camiseta Boca Juniors Titular 2024',         descripcion: 'Diseño tradicional azul y oro.',             precio_minorista: 42000, precio_mayorista: 30000, categoria: 'Clubes',          stock: 30 },
+    { id: 3, codigo_foto: 'river_home_24',       nombre: 'Camiseta River Plate Titular 2024',          descripcion: 'La mítica banda roja cruzada.',              precio_minorista: 42000, precio_mayorista: 30000, categoria: 'Clubes',          stock: 25 },
+    { id: 4, codigo_foto: 'inter_miami_messi',   nombre: 'Camiseta Inter Miami - Messi 10',            descripcion: 'La camiseta rosa de las garzas.',            precio_minorista: 48000, precio_mayorista: 35000, categoria: 'Internacionales', stock: 40 },
+    { id: 5, codigo_foto: 'real_madrid_titular', nombre: 'Camiseta Real Madrid Titular 2024/25',       descripcion: 'La clásica camiseta blanca del rey.',        precio_minorista: 46000, precio_mayorista: 33000, categoria: 'Internacionales', stock: 15 },
+  ];
+
+  // ── State ────────────────────────────────────
+  function loadCamisetas() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Primera vez: usar los datos de seed
+      saveCamisetas(SEED_DATA);
+      return SEED_DATA;
+    }
+    return JSON.parse(raw);
+  }
+
+  function saveCamisetas(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  function nextId(list) {
+    return list.length > 0 ? Math.max(...list.map(c => c.id)) + 1 : 1;
+  }
+
+  // ── UI Feedback ──────────────────────────────
+  function showSuccess(msg) {
+    const el = document.getElementById('success-msg');
+    const txt = document.getElementById('success-text');
+    if (!el || !txt) return;
+    txt.innerText = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 3000);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    const txt = document.getElementById('error-text');
+    if (!el || !txt) return;
+    txt.innerText = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 4000);
+  }
+
+  // ── Formato de precio ─────────────────────────
+  const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(n);
+
+  // ── Renderizar la tabla ───────────────────────
+  function renderTable(list) {
+    const tbody = document.getElementById('camisetas-tbody');
+    const empty = document.getElementById('empty-state');
+    const counter = document.getElementById('total-count');
+    if (!tbody) return;
+
+    if (counter) counter.innerText = list.length.toString();
+
+    if (list.length === 0) {
+      tbody.innerHTML = '';
+      empty?.classList.remove('hidden');
+      return;
+    }
+    empty?.classList.add('hidden');
+
+    tbody.innerHTML = list.map(c => `
+      <tr class="hover:bg-neutral-800/30 transition-colors">
+        <td class="py-4 px-2">
+          <div class="flex items-center space-x-3">
+            <div class="h-10 w-10 bg-neutral-950 rounded overflow-hidden flex-shrink-0 border border-neutral-800 flex items-center justify-center">
+              <img src="/Imagenes/${c.codigo_foto}.webp" alt="${c.nombre}" class="h-full w-full object-cover" onerror="this.src='https://placehold.co/100x100/0a0a0a/74ACDF?text=⚽'"/>
+            </div>
+            <code class="text-[10px] text-celeste-400 font-mono">${c.codigo_foto}</code>
+          </div>
+        </td>
+        <td class="py-4 px-2">
+          <p class="font-bold text-neutral-200">${c.nombre}</p>
+          <span class="inline-block mt-0.5 text-[9px] font-bold text-neutral-500 uppercase bg-neutral-950 px-1.5 py-0.5 rounded">${c.categoria}</span>
+        </td>
+        <td class="py-4 px-2 space-y-0.5">
+          <p class="text-neutral-300">Min: <strong class="text-neutral-100">${fmt(c.precio_minorista)}</strong></p>
+          <p class="text-gold-500">May: <strong class="text-gold-400">${fmt(c.precio_mayorista)}</strong></p>
+        </td>
+        <td class="py-4 px-2 text-center">
+          <span class="font-bold px-2 py-0.5 rounded text-[10px] ${c.stock > 10 ? 'text-emerald-400 bg-emerald-950/20' : c.stock > 0 ? 'text-amber-400 bg-amber-950/20' : 'text-red-400 bg-red-950/20'}">
+            ${c.stock} u.
+          </span>
+        </td>
+        <td class="py-4 px-2 text-right">
+          <div class="inline-flex gap-2">
+            <button
+              class="edit-btn bg-neutral-800 hover:bg-celeste-500 hover:text-neutral-950 text-neutral-300 p-1.5 rounded transition-all duration-200"
+              data-id="${c.id}"
+              title="Editar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              class="del-btn bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-400 p-1.5 rounded transition-all duration-200"
+              data-id="${c.id}"
+              title="Eliminar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    // Asignar listeners a los botones dinámicos
+    document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        // Obtener datos del botón
-        const id = btn.getAttribute('data-id');
-        const nombre = btn.getAttribute('data-nombre');
-        const descripcion = btn.getAttribute('data-descripcion');
-        const precioMin = btn.getAttribute('data-precio-minorista');
-        const precioMay = btn.getAttribute('data-precio-mayorista');
-        const categoria = btn.getAttribute('data-categoria');
-        const stock = btn.getAttribute('data-stock');
-        const foto = btn.getAttribute('data-codigo-foto');
-
-        // Cargar en el formulario
-        if (idInput) idInput.value = id || '';
-        if (nombreInput) nombreInput.value = nombre || '';
-        if (descripcionInput) descripcionInput.value = descripcion || '';
-        if (precioMinInput) precioMinInput.value = precioMin || '';
-        if (precioMayInput) precioMayInput.value = precioMay || '';
-        if (categoriaSelect) categoriaSelect.value = categoria || 'Clubes';
-        if (stockInput) stockInput.value = stock || '0';
-        if (fotoInput) fotoInput.value = foto || '';
-
-        // Cambiar títulos y visibilidad de botón Cancelar
-        if (formTitle) formTitle.innerText = 'Editar Camiseta';
-        if (submitBtn) submitBtn.innerText = 'Actualizar Camiseta';
-        if (cancelBtn) cancelBtn.classList.remove('hidden');
-
-        // Hacer scroll hasta el formulario en mobile
-        formTitle?.scrollIntoView({ behavior: 'smooth' });
+        const id = parseInt(btn.getAttribute('data-id') || '0');
+        const camisetas = loadCamisetas();
+        const c = camisetas.find(x => x.id === id);
+        if (!c) return;
+        fillForm(c);
       });
     });
 
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        // Resetear Formulario
-        const form = document.getElementById('abm-form') as HTMLFormElement;
-        if (form) form.reset();
-        
-        if (idInput) idInput.value = '';
-        if (formTitle) formTitle.innerText = 'Añadir Camiseta';
-        if (submitBtn) submitBtn.innerText = 'Guardar Camiseta';
-        cancelBtn.classList.add('hidden');
+    document.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.getAttribute('data-id') || '0');
+        if (!confirm('¿Estás seguro que querés eliminar esta camiseta? Esta acción es irreversible.')) return;
+        let camisetas = loadCamisetas().filter(x => x.id !== id);
+        saveCamisetas(camisetas);
+        renderTable(camisetas);
+        showSuccess('Camiseta eliminada correctamente.');
       });
-    }
+    });
+  }
+
+  // ── Llenar el formulario con datos a editar ───
+  function fillForm(c) {
+    const getEl = (id) => document.getElementById(id);
+    getEl('jersey-id').value = c.id;
+    getEl('jersey-nombre').value = c.nombre;
+    getEl('jersey-descripcion').value = c.descripcion || '';
+    getEl('jersey-precio-minorista').value = c.precio_minorista;
+    getEl('jersey-precio-mayorista').value = c.precio_mayorista;
+    getEl('jersey-categoria').value = c.categoria;
+    getEl('jersey-stock').value = c.stock;
+    getEl('jersey-codigo-foto').value = c.codigo_foto;
+
+    document.getElementById('form-title').innerText = 'Editar Camiseta';
+    document.getElementById('submit-btn').innerText = 'Actualizar Camiseta';
+    document.getElementById('cancel-edit-btn').classList.remove('hidden');
+    document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Resetear formulario ───────────────────────
+  function resetForm() {
+    document.getElementById('abm-form').reset();
+    document.getElementById('jersey-id').value = '';
+    document.getElementById('form-title').innerText = 'Añadir Camiseta';
+    document.getElementById('submit-btn').innerText = 'Guardar Camiseta';
+    document.getElementById('cancel-edit-btn').classList.add('hidden');
+  }
+
+  // ── Inicialización ────────────────────────────
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('abm-form');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    const exportBtn = document.getElementById('export-btn');
+
+    // Cargar y mostrar al inicio
+    renderTable(loadCamisetas());
+
+    // Submit del formulario
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const getVal = (id) => document.getElementById(id)?.value?.trim();
+      const nombre = getVal('jersey-nombre');
+      const codigo_foto = getVal('jersey-codigo-foto');
+      const precio_minorista = parseFloat(getVal('jersey-precio-minorista') || '0');
+      const precio_mayorista = parseFloat(getVal('jersey-precio-mayorista') || '0');
+
+      if (!nombre || !codigo_foto || isNaN(precio_minorista) || isNaN(precio_mayorista)) {
+        showError('Completá todos los campos requeridos (*).');
+        return;
+      }
+
+      let camisetas = loadCamisetas();
+      const idVal = document.getElementById('jersey-id').value;
+      const existingId = idVal ? parseInt(idVal) : null;
+
+      const item = {
+        id: existingId || nextId(camisetas),
+        codigo_foto,
+        nombre,
+        descripcion: getVal('jersey-descripcion') || '',
+        precio_minorista,
+        precio_mayorista,
+        categoria: getVal('jersey-categoria') || 'Clubes',
+        stock: parseInt(getVal('jersey-stock') || '0'),
+      };
+
+      if (existingId) {
+        camisetas = camisetas.map(c => c.id === existingId ? item : c);
+        showSuccess('Camiseta actualizada correctamente.');
+      } else {
+        camisetas.push(item);
+        showSuccess('Nueva camiseta añadida con éxito.');
+      }
+
+      saveCamisetas(camisetas);
+      renderTable(camisetas);
+      resetForm();
+    });
+
+    // Cancelar edición
+    cancelBtn?.addEventListener('click', resetForm);
+
+    // Exportar como JSON
+    exportBtn?.addEventListener('click', () => {
+      const camisetas = loadCamisetas();
+      const blob = new Blob([JSON.stringify(camisetas, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `paraiso_camisetas_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   });
 </script>

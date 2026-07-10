@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import CamisetaCard from '../components/CamisetaCard.astro';
 import { query } from '../lib/db.js';
 
-// Habilitamos rendering híbrido (estático por defecto, pero con llamadas dinámicas si es necesario)
+// Página completamente estática (compatible con GitHub Pages)
 export const prerender = true;
 
 // Obtener las camisetas más buscadas (primeras 3 de la base de datos)
