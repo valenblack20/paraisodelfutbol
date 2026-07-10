@@ -1,3 +1,33 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Build de Astro
+dist/
+.astro/
+
+# Entorno local (¡NO subir credenciales a GitHub!)
+.env
+.env.local
+.env.*.local
+
+# Editor y sistema
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 node_modules/
 .astro/
 node_modules

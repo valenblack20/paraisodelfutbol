@@ -1,0 +1,72 @@
+name: Deploy El Paraíso del Fútbol a GitHub Pages
+
+on:
+  # Dispara el deploy en cada push a la rama principal
+  push:
+    branches: [main]
+
+  # También permite disparar el workflow manualmente desde la pestaña Actions de GitHub
+  workflow_dispatch:
+
+# Permisos necesarios para publicar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploys simultáneos (el nuevo cancela al anterior si está corriendo)
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────
+  # JOB 1: Build del proyecto Astro
+  # ──────────────────────────────────────────────
+  build:
+    name: Build Astro
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Configurar GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build del proyecto Astro
+        run: npx astro build
+        env:
+          # Variables de entorno accesibles durante el build
+          # (las credenciales de MySQL NO se usan en modo estático)
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+
+      - name: Subir artefacto de build a Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  # ──────────────────────────────────────────────
+  # JOB 2: Deploy a GitHub Pages
+  # ──────────────────────────────────────────────
+  deploy:
+    name: Deploy a GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
