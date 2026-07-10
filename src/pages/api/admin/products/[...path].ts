@@ -7,98 +7,125 @@
 //   PATCH  /api/admin/products/{id}/featured
 import type { APIRoute } from 'astro';
 import { adminCatalogService } from '../../../../modules/admin-catalog/admin-catalog.container.ts';
-import { handleAdminApiError, validateCsrfHeader } from '../../../../modules/admin-catalog/admin-catalog.helper.ts';
+import {
+  handleAdminApiError,
+  jsonError,
+  jsonOk,
+  parseJsonBody,
+  validateAdminWriteRequest
+} from '../../../../modules/admin-catalog/admin-catalog.helper.ts';
 
-function parsePath(path: string | undefined): { id: number; action: string | null } {
-  if (!path) return { id: 0, action: null };
-  const parts = path.split('/');
-  const id = Number(parts[0] || '0');
-  const action = parts[1] || null;
-  return { id, action };
+type JsonRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function jsonError(code: string, message: string, status: number): Response {
-  return new Response(JSON.stringify({ error: { code, message } }), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
+function parsePath(path: string | undefined): { id: number; action: string | null; valid: boolean } {
+  if (!path) return { id: 0, action: null, valid: false };
+
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length < 1 || parts.length > 2) {
+    return { id: 0, action: null, valid: false };
+  }
+
+  const id = Number(parts[0]);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return { id: 0, action: null, valid: false };
+  }
+
+  return {
+    id,
+    action: parts.length === 2 ? parts[1] : null,
+    valid: true
+  };
 }
 
-function jsonOk(data: unknown = { success: true }, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
+function toNumber(value: unknown): unknown {
+  if (value === null || value === undefined || value === '') return value;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
 }
 
-function requireCsrf(request: Request, session: any): Response | null {
-  if (!validateCsrfHeader(request, session?.csrfTokenHash)) {
-    return jsonError('CSRF_INVALID', 'Token CSRF inválido.', 403);
+function coerceProductPayload(input: unknown): unknown {
+  if (!isRecord(input)) return input;
+
+  const body: JsonRecord = { ...input };
+  for (const field of ['categoryId', 'retailPrice', 'wholesalePrice', 'wholesaleMinimum', 'expectedVersion']) {
+    if (field in body) body[field] = toNumber(body[field]);
+  }
+
+  if (Array.isArray(body.variants)) {
+    body.variants = body.variants.map((variant) => {
+      if (!isRecord(variant)) return variant;
+      return {
+        ...variant,
+        stock: toNumber(variant.stock),
+        displayOrder: toNumber(variant.displayOrder)
+      };
+    });
+  }
+
+  if (Array.isArray(body.images)) {
+    body.images = body.images.map((image) => {
+      if (!isRecord(image)) return image;
+      return {
+        ...image,
+        displayOrder: toNumber(image.displayOrder)
+      };
+    });
+  }
+
+  return body;
+}
+
+function requireAuthenticatedAdmin(context: Parameters<APIRoute>[0]): Response | null {
+  const admin = context.locals.admin;
+  if (!admin.authenticated || !admin.user || !admin.session) {
+    return jsonError('UNAUTHORIZED', 'No autorizado.', 401);
   }
   return null;
 }
 
-async function requireJson(request: Request): Promise<{ body: any } | Response> {
-  const ct = request.headers.get('content-type') || '';
-  if (!ct.includes('application/json')) {
-    return jsonError('BAD_REQUEST', 'Debe ser JSON.', 400);
-  }
-  try {
-    const body = await request.json();
-    return { body };
-  } catch {
-    return jsonError('BAD_REQUEST', 'JSON inválido.', 400);
-  }
-}
-
 export const GET: APIRoute = async (context) => {
-  const { id, action } = parsePath(context.params.path);
-  if (action !== null) return jsonError('NOT_FOUND', 'Ruta no encontrada.', 404);
-  if (!id) return jsonError('BAD_REQUEST', 'ID inválido.', 400);
+  const parsed = parsePath(context.params.path);
+  if (!parsed.valid || parsed.action !== null) {
+    return jsonError('NOT_FOUND', 'Ruta no encontrada.', 404);
+  }
 
   try {
-    const prod = await adminCatalogService.getProductById(id);
-    return jsonOk(prod);
+    const product = await adminCatalogService.getProductById(parsed.id);
+    return jsonOk(product);
   } catch (error: unknown) {
     return handleAdminApiError(error);
   }
 };
 
 export const PUT: APIRoute = async (context) => {
-  const adminContext = (context.locals as any).admin;
-  const { id, action } = parsePath(context.params.path);
-  if (action !== null) return jsonError('NOT_FOUND', 'Ruta no encontrada.', 404);
-  if (!id) return jsonError('BAD_REQUEST', 'ID inválido.', 400);
+  const authError = requireAuthenticatedAdmin(context);
+  if (authError) return authError;
 
-  const csrfErr = requireCsrf(context.request, adminContext.session);
-  if (csrfErr) return csrfErr;
-
-  const result = await requireJson(context.request);
-  if (result instanceof Response) return result;
-  const { body } = result;
-
-  // Coerce numeric fields
-  if (body.categoryId !== undefined) body.categoryId = Number(body.categoryId);
-  if (body.retailPrice !== undefined) body.retailPrice = Number(body.retailPrice);
-  if (body.wholesalePrice !== undefined && body.wholesalePrice !== null) body.wholesalePrice = Number(body.wholesalePrice);
-  if (body.wholesaleMinimum !== undefined && body.wholesaleMinimum !== null) body.wholesaleMinimum = Number(body.wholesaleMinimum);
-  if (body.expectedVersion !== undefined) body.expectedVersion = Number(body.expectedVersion);
-  if (Array.isArray(body.variants)) {
-    body.variants = body.variants.map((v: any) => ({
-      ...v,
-      stock: Number(v.stock),
-      displayOrder: Number(v.displayOrder),
-    }));
+  const parsed = parsePath(context.params.path);
+  if (!parsed.valid || parsed.action !== null) {
+    return jsonError('NOT_FOUND', 'Ruta no encontrada.', 404);
   }
-  if (Array.isArray(body.images)) {
-    body.images = body.images.map((img: any) => ({
-      ...img,
-      displayOrder: Number(img.displayOrder),
-    }));
-  }
+
+  const admin = context.locals.admin;
+  const securityError = validateAdminWriteRequest(
+    context.request,
+    admin.session?.csrfTokenHash
+  );
+  if (securityError) return securityError;
+
+  const parsedBody = await parseJsonBody(context.request);
+  if (parsedBody instanceof Response) return parsedBody;
 
   try {
-    await adminCatalogService.updateProduct(adminContext.user.id, id, body);
+    await adminCatalogService.updateProduct(
+      admin.user!.id,
+      parsed.id,
+      coerceProductPayload(parsedBody)
+    );
     return jsonOk();
   } catch (error: unknown) {
     return handleAdminApiError(error);
@@ -106,49 +133,76 @@ export const PUT: APIRoute = async (context) => {
 };
 
 export const PATCH: APIRoute = async (context) => {
-  const adminContext = (context.locals as any).admin;
-  const { id, action } = parsePath(context.params.path);
-  if (!id) return jsonError('BAD_REQUEST', 'ID inválido.', 400);
+  const authError = requireAuthenticatedAdmin(context);
+  if (authError) return authError;
 
-  const csrfErr = requireCsrf(context.request, adminContext.session);
-  if (csrfErr) return csrfErr;
+  const parsed = parsePath(context.params.path);
+  const allowedActions = new Set(['archive', 'publication', 'featured']);
+  if (!parsed.valid || !parsed.action || !allowedActions.has(parsed.action)) {
+    return jsonError('NOT_FOUND', 'Ruta no encontrada.', 404);
+  }
 
-  const result = await requireJson(context.request);
-  if (result instanceof Response) return result;
-  const { body } = result;
+  const admin = context.locals.admin;
+  const securityError = validateAdminWriteRequest(
+    context.request,
+    admin.session?.csrfTokenHash
+  );
+  if (securityError) return securityError;
+
+  const parsedBody = await parseJsonBody(context.request);
+  if (parsedBody instanceof Response) return parsedBody;
+  if (!isRecord(parsedBody)) {
+    return jsonError('VALIDATION_ERROR', 'El cuerpo de la solicitud es inválido.', 422);
+  }
 
   try {
-    if (action === 'archive') {
-      const archived = body.archived !== undefined ? body.archived : body.archive;
-      if (archived === undefined || typeof archived !== 'boolean') {
-        return jsonError('VALIDATION_ERROR', 'Campo "archived" es obligatorio y debe ser boolean.', 422);
+    if (parsed.action === 'archive') {
+      const archived = parsedBody.archived ?? parsedBody.archive;
+      if (typeof archived !== 'boolean') {
+        return jsonError(
+          'VALIDATION_ERROR',
+          'Campo "archived" es obligatorio y debe ser boolean.',
+          422
+        );
       }
+
       if (archived) {
-        await adminCatalogService.archiveProduct(adminContext.user.id, id);
+        await adminCatalogService.archiveProduct(admin.user!.id, parsed.id);
       } else {
-        await adminCatalogService.restoreProduct(adminContext.user.id, id);
+        await adminCatalogService.restoreProduct(admin.user!.id, parsed.id);
       }
       return jsonOk();
-
-    } else if (action === 'publication') {
-      const { published } = body;
-      if (published === undefined || typeof published !== 'boolean') {
-        return jsonError('VALIDATION_ERROR', 'Campo "published" es obligatorio.', 422);
-      }
-      await adminCatalogService.setProductPublished(adminContext.user.id, id, published);
-      return jsonOk();
-
-    } else if (action === 'featured') {
-      const { featured } = body;
-      if (featured === undefined || typeof featured !== 'boolean') {
-        return jsonError('VALIDATION_ERROR', 'Campo "featured" es obligatorio.', 422);
-      }
-      await adminCatalogService.setProductFeatured(adminContext.user.id, id, featured);
-      return jsonOk();
-
-    } else {
-      return jsonError('NOT_FOUND', `Acción "${action}" no reconocida.`, 404);
     }
+
+    if (parsed.action === 'publication') {
+      if (typeof parsedBody.published !== 'boolean') {
+        return jsonError(
+          'VALIDATION_ERROR',
+          'Campo "published" es obligatorio y debe ser boolean.',
+          422
+        );
+      }
+      await adminCatalogService.setProductPublished(
+        admin.user!.id,
+        parsed.id,
+        parsedBody.published
+      );
+      return jsonOk();
+    }
+
+    if (typeof parsedBody.featured !== 'boolean') {
+      return jsonError(
+        'VALIDATION_ERROR',
+        'Campo "featured" es obligatorio y debe ser boolean.',
+        422
+      );
+    }
+    await adminCatalogService.setProductFeatured(
+      admin.user!.id,
+      parsed.id,
+      parsedBody.featured
+    );
+    return jsonOk();
   } catch (error: unknown) {
     return handleAdminApiError(error);
   }

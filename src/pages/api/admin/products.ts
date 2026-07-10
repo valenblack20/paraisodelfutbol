@@ -1,7 +1,65 @@
 // src/pages/api/admin/products.ts
 import type { APIRoute } from 'astro';
 import { adminCatalogService } from '../../../modules/admin-catalog/admin-catalog.container.ts';
-import { handleAdminApiError, validateCsrfHeader } from '../../../modules/admin-catalog/admin-catalog.helper.ts';
+import {
+  handleAdminApiError,
+  jsonError,
+  jsonOk,
+  parseJsonBody,
+  validateAdminWriteRequest
+} from '../../../modules/admin-catalog/admin-catalog.helper.ts';
+
+type JsonRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toNumber(value: unknown): unknown {
+  if (value === null || value === undefined || value === '') return value;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
+}
+
+function coerceProductPayload(input: unknown): unknown {
+  if (!isRecord(input)) return input;
+
+  const body: JsonRecord = { ...input };
+  for (const field of ['categoryId', 'retailPrice', 'wholesalePrice', 'wholesaleMinimum', 'expectedVersion']) {
+    if (field in body) body[field] = toNumber(body[field]);
+  }
+
+  if (Array.isArray(body.variants)) {
+    body.variants = body.variants.map((variant) => {
+      if (!isRecord(variant)) return variant;
+      return {
+        ...variant,
+        stock: toNumber(variant.stock),
+        displayOrder: toNumber(variant.displayOrder)
+      };
+    });
+  }
+
+  if (Array.isArray(body.images)) {
+    body.images = body.images.map((image) => {
+      if (!isRecord(image)) return image;
+      return {
+        ...image,
+        displayOrder: toNumber(image.displayOrder)
+      };
+    });
+  }
+
+  return body;
+}
+
+function requireAuthenticatedAdmin(context: Parameters<APIRoute>[0]): Response | null {
+  const admin = context.locals.admin;
+  if (!admin.authenticated || !admin.user || !admin.session) {
+    return jsonError('UNAUTHORIZED', 'No autorizado.', 401);
+  }
+  return null;
+}
 
 export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url);
@@ -33,64 +91,32 @@ export const GET: APIRoute = async (context) => {
       page,
       pageSize
     });
-    return new Response(JSON.stringify(list), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store'
-      }
-    });
+    return jsonOk(list);
   } catch (error: unknown) {
     return handleAdminApiError(error);
   }
 };
 
 export const POST: APIRoute = async (context) => {
-  const adminContext = (context.locals as any).admin;
+  const authError = requireAuthenticatedAdmin(context);
+  if (authError) return authError;
 
-  if (!validateCsrfHeader(context.request, adminContext.session?.csrfTokenHash)) {
-    return new Response(JSON.stringify({ error: { code: 'CSRF_INVALID', message: 'Token CSRF inválido.' } }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
-  }
+  const admin = context.locals.admin;
+  const securityError = validateAdminWriteRequest(
+    context.request,
+    admin.session?.csrfTokenHash
+  );
+  if (securityError) return securityError;
 
-  const contentType = context.request.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    return new Response(JSON.stringify({ error: { code: 'BAD_REQUEST', message: 'Debe ser JSON.' } }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
-  }
+  const parsedBody = await parseJsonBody(context.request);
+  if (parsedBody instanceof Response) return parsedBody;
 
   try {
-    const body = await context.request.json();
-
-    // Enforce explicit types parsed from client inputs
-    if (body.categoryId !== undefined) body.categoryId = Number(body.categoryId);
-    if (body.retailPrice !== undefined) body.retailPrice = Number(body.retailPrice);
-    if (body.wholesalePrice !== undefined && body.wholesalePrice !== null) body.wholesalePrice = Number(body.wholesalePrice);
-    if (body.wholesaleMinimum !== undefined && body.wholesaleMinimum !== null) body.wholesaleMinimum = Number(body.wholesaleMinimum);
-    
-    if (Array.isArray(body.variants)) {
-      body.variants = body.variants.map((v: any) => ({
-        ...v,
-        stock: Number(v.stock),
-        displayOrder: Number(v.displayOrder)
-      }));
-    }
-    if (Array.isArray(body.images)) {
-      body.images = body.images.map((img: any) => ({
-        ...img,
-        displayOrder: Number(img.displayOrder)
-      }));
-    }
-
-    const id = await adminCatalogService.createProduct(adminContext.user.id, body);
-    return new Response(JSON.stringify({ id, success: true }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
+    const id = await adminCatalogService.createProduct(
+      admin.user!.id,
+      coerceProductPayload(parsedBody)
+    );
+    return jsonOk({ id, success: true }, 201);
   } catch (error: unknown) {
     return handleAdminApiError(error);
   }
