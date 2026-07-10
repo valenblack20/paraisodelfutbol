@@ -1,17 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CamisetaCard from '../components/CamisetaCard.astro';
-import { getDatabasePool } from '../infrastructure/database/mysql';
+import { productService } from '../modules/products/product.container';
 
 // Obtener todas las camisetas de la base de datos
 let camisetas = [];
+let hasError = false;
 try {
-  const pool = getDatabasePool();
-  const [rows] = await pool.query('SELECT * FROM camisetas');
-  camisetas = rows as any[];
+  camisetas = await productService.getCatalog();
 } catch (e) {
   console.error('Error cargando camisetas en catálogo:', e);
-  throw e;
+  hasError = true;
 }
 ---
 
@@ -19,79 +18,101 @@ try {
   
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     
-    <!-- Cabecera del catálogo -->
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-      <div class="inline-flex items-center space-x-1 text-gold-500 text-sm font-semibold uppercase tracking-widest">
-        <span>Catálogo Oficial</span>
-        <span>★★★</span>
-      </div>
-      <h1 class="text-3xl sm:text-5xl font-extrabold uppercase font-display">
-        Nuestras <span class="text-celeste-400">Camisetas</span>
-      </h1>
-      <p class="text-sm text-neutral-400">
-        Filtrá por tu categoría preferida y encontrá tu camiseta ideal. Recordá que sumando 6 unidades o más, accedés automáticamente a precios de fábrica en todo el carrito.
-      </p>
-    </div>
-
-    <!-- Botones de Filtro -->
-    <div class="flex flex-wrap justify-center gap-3 mb-12">
-      <button 
-        class="filter-btn bg-gold-500 text-neutral-950 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-gold-500 transition-all duration-300 hover:scale-105 active:scale-95"
-        data-filter="all"
-      >
-        Todas
-      </button>
-      <button 
-        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-        data-filter="Clubes"
-      >
-        Clubes
-      </button>
-      <button 
-        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-        data-filter="Selecciones"
-      >
-        Selecciones
-      </button>
-      <button 
-        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-        data-filter="Nacionales"
-      >
-        Nacionales
-      </button>
-      <button 
-        class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-        data-filter="Internacionales"
-      >
-        Internacionales
-      </button>
-    </div>
-
-    <!-- Mensaje sin productos -->
-    <div id="no-products-msg" class="hidden text-center py-20 text-neutral-500">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-neutral-800 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <p class="text-base font-semibold">No se encontraron camisetas en esta categoría.</p>
-    </div>
-
-    <!-- Grilla de Camisetas -->
-    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {camisetas.map((camiseta) => (
-        <div class="product-item-wrapper" data-category={camiseta.categoria}>
-          <CamisetaCard 
-            id={camiseta.id}
-            codigo_foto={camiseta.codigo_foto}
-            nombre={camiseta.nombre}
-            descripcion={camiseta.descripcion}
-            precio_minorista={Number(camiseta.precio_minorista)}
-            precio_mayorista={Number(camiseta.precio_mayorista)}
-            categoria={camiseta.categoria}
-            stock={camiseta.stock}
-          />
+    {hasError ? (
+      <div class="text-center py-20 max-w-xl mx-auto space-y-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-950/50 border border-red-500/30 text-red-500 text-3xl mb-2 select-none">
+          ⚠️
         </div>
-      ))}
-    </div>
+        <h2 class="text-2xl font-bold uppercase tracking-wide text-neutral-100">
+          No pudimos cargar el catálogo
+        </h2>
+        <p class="text-sm text-neutral-400 leading-relaxed">
+          Estamos teniendo una dificultad temporal para consultar nuestros productos. Intentá nuevamente en unos minutos.
+        </p>
+        <button 
+          onclick="window.location.reload()" 
+          class="bg-gold-500 hover:bg-gold-400 text-neutral-950 font-extrabold px-8 py-3.5 rounded-lg text-xs uppercase tracking-wider transition-all duration-300 shadow-lg shadow-gold-500/20 active:scale-95"
+        >
+          Reintentar
+        </button>
+      </div>
+    ) : (
+      <>
+        <!-- Cabecera del catálogo -->
+        <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div class="inline-flex items-center space-x-1 text-gold-500 text-sm font-semibold uppercase tracking-widest">
+            <span>Catálogo Oficial</span>
+            <span>★★★</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-extrabold uppercase font-display">
+            Nuestras <span class="text-celeste-400">Camisetas</span>
+          </h1>
+          <p class="text-sm text-neutral-400">
+            Filtrá por tu categoría preferida y encontrá tu camiseta ideal. Recordá que sumando 6 unidades o más, accedés automáticamente a precios de fábrica en todo el carrito.
+          </p>
+        </div>
+
+        <!-- Botones de Filtro -->
+        <div class="flex flex-wrap justify-center gap-3 mb-12">
+          <button 
+            class="filter-btn bg-gold-500 text-neutral-950 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-gold-500 transition-all duration-300 hover:scale-105 active:scale-95"
+            data-filter="all"
+          >
+            Todas
+          </button>
+          <button 
+            class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+            data-filter="Clubes"
+          >
+            Clubes
+          </button>
+          <button 
+            class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+            data-filter="Selecciones"
+          >
+            Selecciones
+          </button>
+          <button 
+            class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+            data-filter="Nacionales"
+          >
+            Nacionales
+          </button>
+          <button 
+            class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
+            data-filter="Internacionales"
+          >
+            Internacionales
+          </button>
+        </div>
+
+        <!-- Mensaje sin productos -->
+        <div id="no-products-msg" class="hidden text-center py-20 text-neutral-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-neutral-800 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-base font-semibold">No se encontraron camisetas en esta categoría.</p>
+        </div>
+
+        <!-- Grilla de Camisetas -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {camisetas.map((camiseta) => (
+            <div class="product-item-wrapper" data-category={camiseta.categoria}>
+              <CamisetaCard 
+                id={camiseta.id}
+                codigo_foto={camiseta.codigoFoto}
+                nombre={camiseta.nombre}
+                descripcion={camiseta.descripcion || ''}
+                precio_minorista={camiseta.precioMinorista}
+                precio_mayorista={camiseta.precioMayorista}
+                categoria={camiseta.categoria}
+                stock={camiseta.stock}
+              />
+            </div>
+          ))}
+        </div>
+      </>
+    )}
 
   </section>
 

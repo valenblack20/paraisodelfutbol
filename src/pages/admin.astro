@@ -1,10 +1,11 @@
 ---
-// admin.astro — Versión estática (GitHub Pages)
-// Toda la lógica ABM se maneja en el cliente con localStorage.
-// Para conectar a MySQL real, hacer deploy en un servidor con SSR (VPS / Railway / Render).
 import Layout from '../layouts/Layout.astro';
+import { env } from '../infrastructure/config/env';
 
-// En modo estático siempre prerender = true (implícito, no necesita declararse)
+// Restricción de seguridad para el Panel Admin
+if (env.NODE_ENV !== 'development' || !env.ENABLE_UNSAFE_ADMIN) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
 ---
 
 <Layout title="Dashboard Admin ABM - El Paraíso del Fútbol">

@@ -1,14 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CamisetaCard from '../components/CamisetaCard.astro';
-import { getDatabasePool } from '../infrastructure/database/mysql';
+import { productService } from '../modules/products/product.container';
 
 // Obtener las camisetas más buscadas (primeras 3 de la base de datos)
 let camisetasDestacadas = [];
 try {
-  const pool = getDatabasePool();
-  const [rows] = await pool.query('SELECT * FROM camisetas LIMIT 3');
-  camisetasDestacadas = rows as any[];
+  const allProducts = await productService.getCatalog();
+  camisetasDestacadas = allProducts.slice(0, 3);
 } catch (e) {
   console.error('Error cargando camisetas destacadas:', e);
   throw e;
@@ -123,11 +122,11 @@ try {
       {camisetasDestacadas.map((camiseta) => (
         <CamisetaCard 
           id={camiseta.id}
-          codigo_foto={camiseta.codigo_foto}
+          codigo_foto={camiseta.codigoFoto}
           nombre={camiseta.nombre}
-          descripcion={camiseta.descripcion}
-          precio_minorista={Number(camiseta.precio_minorista)}
-          precio_mayorista={Number(camiseta.precio_mayorista)}
+          descripcion={camiseta.descripcion || ''}
+          precio_minorista={camiseta.precioMinorista}
+          precio_mayorista={camiseta.precioMayorista}
           categoria={camiseta.categoria}
           stock={camiseta.stock}
         />

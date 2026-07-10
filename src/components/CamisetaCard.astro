@@ -36,6 +36,8 @@ const formatPrice = (price: number) => {
     minimumFractionDigits: 0
   }).format(price);
 };
+
+const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
 ---
 
 <div 
@@ -46,7 +48,6 @@ const formatPrice = (price: number) => {
   data-precio-mayorista={precio_mayorista}
   data-codigo-foto={codigo_foto}
   data-categoria={categoria}
-  tabindex="0"
 >
   
   <!-- Contenedor Foto con destello radial detrás -->
@@ -55,10 +56,10 @@ const formatPrice = (price: number) => {
     
     <img 
       src={`/Imagenes/${codigo_foto}.webp`}
-      alt={`Camiseta de ${nombre}`}
-      class={`w-full h-full max-h-full object-${imageFit} group-hover:scale-[1.03] transition-transform duration-500`}
+      alt={nombre}
+      class={`w-full h-full max-h-full ${fitClass} group-hover:scale-[1.03] transition-transform duration-500`}
       loading="lazy"
-      onerror="this.onerror=null; this.src='https://placehold.co/600x600/121212/D4AF37?text=Paraiso+Futbol';"
+      onerror="this.onerror=null; this.src='/placeholder.svg';"
     />
     
     <!-- Tag Categoría / Personalizado -->
