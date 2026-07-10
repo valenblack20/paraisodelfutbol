@@ -1,0 +1,290 @@
+---
+// src/pages/admin/products.astro
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { adminCatalogService } from '../../modules/admin-catalog/admin-catalog.container';
+
+const adminContext = (Astro.locals as any).admin;
+if (!adminContext.authenticated) {
+  return Astro.redirect('/admin/login');
+}
+
+const url = new URL(Astro.request.url);
+const search = url.searchParams.get('search') || undefined;
+const categoryIdStr = url.searchParams.get('categoryId');
+const publishedStr = url.searchParams.get('published');
+const featuredStr = url.searchParams.get('featured');
+const archivedStr = url.searchParams.get('archived');
+const lowStockStr = url.searchParams.get('lowStock');
+const pageStr = url.searchParams.get('page');
+
+const categoryId = categoryIdStr ? Number(categoryIdStr) : undefined;
+const published = publishedStr ? publishedStr === 'true' : undefined;
+const featured = featuredStr ? featuredStr === 'true' : undefined;
+const archived = archivedStr === 'true'; // Show archived toggle
+const lowStock = lowStockStr === 'true';
+const page = pageStr ? Number(pageStr) : 1;
+
+let categories = [];
+let pagedProducts = { items: [], total: 0, page: 1, pageSize: 20 };
+
+try {
+  categories = await adminCatalogService.getCategories();
+  pagedProducts = await adminCatalogService.getProducts({
+    search,
+    categoryId,
+    published,
+    featured,
+    archived,
+    lowStock,
+    page,
+    pageSize: 20
+  });
+} catch (e) {
+  console.error('[Admin Products] Error fetching list:', e);
+}
+
+const totalPages = Math.ceil(pagedProducts.total / pagedProducts.pageSize) || 1;
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 0
+  }).format(price);
+};
+---
+
+<AdminLayout title="Administrar Productos">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-900 pb-6">
+      <div>
+        <h1 class="text-2xl font-black uppercase text-white tracking-wide">Productos</h1>
+        <p class="text-xs text-neutral-400 mt-1">Administra el catálogo de camisetas, variantes de talle y stock.</p>
+      </div>
+      <a 
+        href="/admin/products/new" 
+        class="bg-[#D4AF37] hover:bg-[#b8932c] text-[#0c0c0c] text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors inline-block focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+      >
+        + Nueva Camiseta
+      </a>
+    </div>
+
+    <!-- Filters Area -->
+    <form method="GET" class="bg-[#121212]/30 border border-neutral-850 rounded-2xl p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="filter-search">Buscar</label>
+        <input 
+          type="text" 
+          id="filter-search" 
+          name="search" 
+          value={search || ''} 
+          class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37]" 
+          placeholder="Nombre, SKU o descripción..."
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="filter-category">Categoría</label>
+        <select 
+          id="filter-category" 
+          name="categoryId" 
+          class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+        >
+          <option value="">Todas</option>
+          {categories.map(c => (
+            <option value={c.id} selected={categoryId === c.id}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="filter-pub">Publicación</label>
+        <select 
+          id="filter-pub" 
+          name="published" 
+          class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+        >
+          <option value="">Todos</option>
+          <option value="true" selected={publishedStr === 'true'}>Publicado</option>
+          <option value="false" selected={publishedStr === 'false'}>No Publicado</option>
+        </select>
+      </div>
+
+      <!-- Quick checkboxes and buttons -->
+      <div class="flex flex-col justify-end space-y-2">
+        <div class="flex items-center gap-4">
+          <label class="flex items-center space-x-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" name="lowStock" value="true" checked={lowStock} class="rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            <span>Poco Stock (&le; 5)</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" name="archived" value="true" checked={archived} class="rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            <span>Ver Archivados</span>
+          </label>
+        </div>
+        <div class="flex gap-2">
+          <button 
+            type="submit" 
+            class="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold py-2 rounded-xl transition-colors border border-neutral-700 focus:outline-none"
+          >
+            Filtrar
+          </button>
+          <a 
+            href="/admin/products" 
+            class="flex-1 bg-neutral-900 hover:bg-neutral-850 text-neutral-400 text-xs font-bold py-2 rounded-xl border border-neutral-850 text-center transition-colors focus:outline-none"
+          >
+            Limpiar
+          </a>
+        </div>
+      </div>
+    </form>
+
+    <!-- Product Table -->
+    <div class="overflow-x-auto border border-neutral-850 rounded-2xl bg-[#121212]/30">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-neutral-850 text-neutral-400 text-[10px] font-bold uppercase tracking-wider bg-[#161616]/40">
+            <th class="px-6 py-4">Imagen</th>
+            <th class="px-6 py-4">Camiseta / SKU</th>
+            <th class="px-6 py-4">Categoría</th>
+            <th class="px-6 py-4">Precio</th>
+            <th class="px-6 py-4">Stock Total</th>
+            <th class="px-6 py-4">Estado</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-900 text-xs">
+          {pagedProducts.items.map((prod) => (
+            <tr class={`hover:bg-neutral-900/30 transition-colors ${prod.archived ? 'opacity-50 bg-neutral-950/10' : ''}`}>
+              <td class="px-6 py-4">
+                <div class="w-10 h-12 bg-neutral-900 border border-neutral-850 rounded-lg overflow-hidden flex items-center justify-center p-1">
+                  <img 
+                    src={prod.primaryImagePath || '/placeholder.svg'} 
+                    alt={prod.name} 
+                    class="max-h-full max-w-full object-contain"
+                    onerror="this.onerror=null; this.src='/placeholder.svg';"
+                  />
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-white text-sm">{prod.name}</div>
+                <div class="text-[10px] text-neutral-500 font-mono mt-0.5">{prod.sku}</div>
+              </td>
+              <td class="px-6 py-4 text-neutral-300 font-semibold">{prod.categoryName || 'S/C'}</td>
+              <td class="px-6 py-4 font-bold text-neutral-200">{formatPrice(prod.retailPrice)}</td>
+              <td class="px-6 py-4">
+                <span class={`font-bold ${prod.stock <= 5 ? 'text-red-400' : 'text-neutral-400'}`}>
+                  {prod.stock} uds.
+                </span>
+              </td>
+              <td class="px-6 py-4 space-y-1">
+                <div class="flex gap-2">
+                  <span class={`inline-block px-2 py-0.5 rounded text-[8px] font-bold uppercase border ${prod.published ? 'text-emerald-400 border-emerald-500/20 bg-emerald-950/20' : 'text-neutral-500 border-neutral-800 bg-neutral-950/40'}`}>
+                    {prod.published ? 'Publicado' : 'Borrador'}
+                  </span>
+                  {prod.featured && (
+                    <span class="inline-block px-2 py-0.5 rounded text-[8px] font-bold uppercase border text-[#D4AF37] border-yellow-500/20 bg-yellow-950/20">
+                      Destacado
+                    </span>
+                  )}
+                  {prod.archived && (
+                    <span class="inline-block px-2 py-0.5 rounded text-[8px] font-bold uppercase border text-red-400 border-red-500/20 bg-red-950/20">
+                      Archivado
+                    </span>
+                  )}
+                </div>
+              </td>
+              <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                <a 
+                  href={`/admin/products/${prod.id}`}
+                  class="bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-3 py-1.5 rounded-lg border border-neutral-700 transition-colors inline-block focus:outline-none"
+                >
+                  Editar
+                </a>
+                <button 
+                  class="btn-toggle-pub bg-neutral-900 hover:bg-neutral-850 text-neutral-300 font-bold px-3 py-1.5 rounded-lg border border-neutral-850 transition-colors focus:outline-none"
+                  data-id={prod.id}
+                  data-pub={prod.published ? "true" : "false"}
+                >
+                  {prod.published ? 'Pausar' : 'Publicar'}
+                </button>
+              </td>
+            </tr>
+          ))}
+          {pagedProducts.items.length === 0 && (
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-neutral-500">
+                No se encontraron camisetas que coincidan con la búsqueda.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    {totalPages > 1 && (
+      <div class="flex justify-between items-center pt-4 border-t border-neutral-900">
+        <span class="text-xs text-neutral-400">Página {pagedProducts.page} de {totalPages}</span>
+        <div class="flex gap-2">
+          {pagedProducts.page > 1 && (
+            <a 
+              href={`/admin/products?page=${pagedProducts.page - 1}&search=${search || ''}&categoryId=${categoryIdStr || ''}&published=${publishedStr || ''}&featured=${featuredStr || ''}&lowStock=${lowStock ? 'true' : ''}&archived=${archived ? 'true' : ''}`}
+              class="bg-neutral-900 hover:bg-neutral-850 text-white font-bold px-4 py-2 border border-neutral-800 rounded-xl text-xs uppercase transition-colors"
+            >
+              Anterior
+            </a>
+          )}
+          {pagedProducts.page < totalPages && (
+            <a 
+              href={`/admin/products?page=${pagedProducts.page + 1}&search=${search || ''}&categoryId=${categoryIdStr || ''}&published=${publishedStr || ''}&featured=${featuredStr || ''}&lowStock=${lowStock ? 'true' : ''}&archived=${archived ? 'true' : ''}`}
+              class="bg-[#D4AF37] hover:bg-[#b8932c] text-[#0c0c0c] font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-colors"
+            >
+              Siguiente
+            </a>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toggle publication status
+      document.querySelectorAll('.btn-toggle-pub').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const currentPub = btn.getAttribute('data-pub') === "true";
+          const confirmMsg = currentPub 
+            ? '¿Desea despublicar esta camiseta del catálogo público?' 
+            : '¿Desea publicar esta camiseta para que los clientes puedan comprarla?';
+
+          if (!confirm(confirmMsg)) return;
+
+          const rawToken = window.csrfToken || sessionStorage.getItem('paraiso_csrf_token') || '';
+          try {
+            const res = await fetch(`/api/admin/products/${id}/publication`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-csrf-token': rawToken
+              },
+              body: JSON.stringify({ published: !currentPub })
+            });
+
+            if (res.ok) {
+              window.location.reload();
+            } else {
+              const errData = await res.json();
+              alert(errData.error?.message || 'Error al cambiar estado.');
+            }
+          } catch (e) {
+            console.error(e);
+            alert('Error de red al actualizar publicación.');
+          }
+        });
+      });
+    });
+  </script>
+</AdminLayout>

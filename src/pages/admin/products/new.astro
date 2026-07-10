@@ -1,0 +1,433 @@
+---
+// src/pages/admin/products/new.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { adminCatalogService } from '../../../modules/admin-catalog/admin-catalog.container';
+
+const adminContext = (Astro.locals as any).admin;
+if (!adminContext.authenticated) {
+  return Astro.redirect('/admin/login');
+}
+
+let categories = [];
+try {
+  categories = await adminCatalogService.getCategories();
+} catch (e) {
+  console.error('[Admin Product New] Fetching categories failed:', e);
+}
+---
+
+<AdminLayout title="Nueva Camiseta">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-neutral-900 pb-6">
+      <div>
+        <a href="/admin/products" class="text-xs text-neutral-400 hover:text-gold-400 underline transition-colors">&larr; Volver al listado</a>
+        <h1 class="text-2xl font-black uppercase text-white tracking-wide mt-2">Nueva Camiseta</h1>
+      </div>
+    </div>
+
+    <!-- Creation Form -->
+    <form id="form-product" class="space-y-8">
+      
+      <!-- Seccion A: Informacion Basica -->
+      <div class="bg-[#121212]/40 border border-neutral-850 rounded-2xl p-6 space-y-4">
+        <h3 class="text-sm font-bold uppercase text-white tracking-wider border-b border-neutral-900 pb-2">Información Básica</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-name">Nombre</label>
+            <input type="text" id="prod-name" name="name" required class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37]" placeholder="ej. Camiseta Argentina Edición Especial" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-slug">Slug (URL)</label>
+            <input type="text" id="prod-slug" name="slug" required class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37]" placeholder="ej. camiseta-argentina-especial" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-sku">SKU Principal</label>
+            <input type="text" id="prod-sku" name="sku" required class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37]" placeholder="ej. ARG-HOME-2026" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-category">Categoría</label>
+            <select id="prod-category" name="categoryId" required class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]">
+              <option value="">Seleccione una categoría</option>
+              {categories.map(c => (
+                <option value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-desc">Descripción</label>
+          <textarea id="prod-desc" name="description" rows="3" class="w-full bg-[#161616] border border-neutral-800 rounded-xl p-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37] resize-none" placeholder="Escribe detalles del producto..."></textarea>
+        </div>
+      </div>
+
+      <!-- Seccion B: Precios y Reglas Mayoristas -->
+      <div class="bg-[#121212]/40 border border-neutral-850 rounded-2xl p-6 space-y-4">
+        <h3 class="text-sm font-bold uppercase text-white tracking-wider border-b border-neutral-900 pb-2">Precios y Venta Mayorista</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-retail">Precio Minorista (ARS)</label>
+            <input type="number" id="prod-retail" name="retailPrice" required min="0" class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]" placeholder="0" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-wholesale">Precio Mayorista (ARS) (Opcional)</label>
+            <input type="number" id="prod-wholesale" name="wholesalePrice" min="0" class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]" placeholder="N/A" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="prod-whol-min">Mínimo Compra Mayorista</label>
+            <input type="number" id="prod-whol-min" name="wholesaleMinimum" min="1" value="6" class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Seccion C: Estados -->
+      <div class="bg-[#121212]/40 border border-neutral-850 rounded-2xl p-6 space-y-4">
+        <h3 class="text-sm font-bold uppercase text-white tracking-wider border-b border-neutral-900 pb-2">Publicación y Visibilidad</h3>
+        
+        <div class="flex flex-wrap gap-6">
+          <label class="flex items-center space-x-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="prod-published" name="published" checked class="rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            <span>Publicado (Visible en el catálogo público)</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-xs text-neutral-300">
+            <input type="checkbox" id="prod-featured" name="featured" class="rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            <span>Destacado (Se muestra en la sección principal)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Seccion D: Variantes y Stock -->
+      <div class="bg-[#121212]/40 border border-neutral-850 rounded-2xl p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-neutral-900 pb-2">
+          <h3 class="text-sm font-bold uppercase text-white tracking-wider">Variantes de Talle e Inventario</h3>
+          <button type="button" id="btn-add-variant" class="bg-neutral-800 hover:bg-neutral-700 text-xs text-[#D4AF37] font-bold px-3 py-1.5 rounded-lg border border-neutral-700 transition-colors">+ Talle</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="text-neutral-400 text-[10px] font-bold uppercase tracking-wider border-b border-neutral-850">
+                <th class="py-2 pr-4">Código Talle</th>
+                <th class="py-2 pr-4">SKU Variante</th>
+                <th class="py-2 pr-4">Stock</th>
+                <th class="py-2 pr-4">Orden</th>
+                <th class="py-2 pr-4">Activo</th>
+                <th class="py-2 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="variants-tbody" class="divide-y divide-neutral-900">
+              <!-- JS will load rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Seccion E: Galería de Imágenes -->
+      <div class="bg-[#121212]/40 border border-neutral-850 rounded-2xl p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-neutral-900 pb-2">
+          <div class="space-y-1">
+            <h3 class="text-sm font-bold uppercase text-white tracking-wider">Galería de Imágenes</h3>
+            <p class="text-[10px] text-neutral-400">Usá una imagen ya disponible dentro de `/public/Imagenes` (ej: `/Imagenes/arg_home_3stars.webp` o `/Imagenes/arg_home_3stars_back.webp`).</p>
+          </div>
+          <button type="button" id="btn-add-image" class="bg-neutral-800 hover:bg-neutral-700 text-xs text-[#D4AF37] font-bold px-3 py-1.5 rounded-lg border border-neutral-700 transition-colors">+ Imagen</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="text-neutral-400 text-[10px] font-bold uppercase tracking-wider border-b border-neutral-850">
+                <th class="py-2 pr-4">Ruta Imagen</th>
+                <th class="py-2 pr-4">Texto Alternativo (Alt)</th>
+                <th class="py-2 pr-4">Orden</th>
+                <th class="py-2 pr-4">Principal</th>
+                <th class="py-2 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="images-tbody" class="divide-y divide-neutral-900">
+              <!-- JS will load rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-4">
+        <a href="/admin/products" class="bg-neutral-900 hover:bg-neutral-850 border border-neutral-850 text-neutral-300 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">Cancelar</a>
+        <button type="submit" class="bg-[#D4AF37] hover:bg-[#b8932c] text-[#0c0c0c] font-bold px-8 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors">Guardar Producto</button>
+      </div>
+
+    </form>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('form-product');
+      const prodName = document.getElementById('prod-name');
+      const prodSlug = document.getElementById('prod-slug');
+      const prodSku = document.getElementById('prod-sku');
+
+      // Auto-suggest slug from name
+      prodName.addEventListener('input', () => {
+        prodSlug.value = prodName.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      });
+
+      // --- Variant collection logic ---
+      const variantsTbody = document.getElementById('variants-tbody');
+      const btnAddVariant = document.getElementById('btn-add-variant');
+
+      let variantRows = [];
+      const defaultSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+      function renderVariants() {
+        variantsTbody.innerHTML = '';
+        variantRows.forEach((v, index) => {
+          const tr = document.createElement('tr');
+          tr.className = 'align-middle';
+          tr.innerHTML = `
+            <td class="py-3 pr-4">
+              <input type="text" value="${v.sizeCode}" placeholder="S, M, L..." required class="v-size bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-24 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="text" value="${v.sku}" placeholder="SKU Variante" required class="v-sku bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-40 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="number" value="${v.stock}" min="0" required class="v-stock bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-24 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="number" value="${v.displayOrder}" min="0" required class="v-order bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-20 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="checkbox" ${v.active ? 'checked' : ''} class="v-active rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            </td>
+            <td class="py-3 text-right">
+              <button type="button" class="btn-remove-v text-red-400 hover:text-red-300 font-bold px-2 py-1 text-xs">Eliminar</button>
+            </td>
+          `;
+
+          // Auto SKU suggest on SKU or variant change
+          const vSizeInput = tr.querySelector('.v-size');
+          const vSkuInput = tr.querySelector('.v-sku');
+          const vStockInput = tr.querySelector('.v-stock');
+          const vOrderInput = tr.querySelector('.v-order');
+          const vActiveInput = tr.querySelector('.v-active');
+
+          const updateRowData = () => {
+            v.sizeCode = vSizeInput.value.trim().toUpperCase();
+            v.sku = vSkuInput.value.trim().toUpperCase();
+            v.stock = Number(vStockInput.value);
+            v.displayOrder = Number(vOrderInput.value);
+            v.active = vActiveInput.checked;
+          };
+
+          vSizeInput.addEventListener('input', () => {
+            if (prodSku.value) {
+              vSkuInput.value = `${prodSku.value.trim().toUpperCase()}-${vSizeInput.value.trim().toUpperCase()}`;
+            }
+            updateRowData();
+          });
+          vSkuInput.addEventListener('input', updateRowData);
+          vStockInput.addEventListener('input', updateRowData);
+          vOrderInput.addEventListener('input', updateRowData);
+          vActiveInput.addEventListener('change', updateRowData);
+
+          tr.querySelector('.btn-remove-v').addEventListener('click', () => {
+            variantRows.splice(index, 1);
+            renderVariants();
+          });
+
+          variantsTbody.appendChild(tr);
+        });
+      }
+
+      btnAddVariant.addEventListener('click', () => {
+        const nextIndex = variantRows.length;
+        const sizeCode = defaultSizes[nextIndex % defaultSizes.length];
+        const initialSku = prodSku.value ? `${prodSku.value.trim().toUpperCase()}-${sizeCode}` : '';
+        variantRows.push({
+          sizeCode,
+          sku: initialSku,
+          stock: 10,
+          displayOrder: nextIndex,
+          active: true
+        });
+        renderVariants();
+      });
+
+      // Load default variants on load
+      defaultSizes.forEach((size, idx) => {
+        variantRows.push({
+          sizeCode: size,
+          sku: '',
+          stock: 10,
+          displayOrder: idx,
+          active: true
+        });
+      });
+      renderVariants();
+
+
+      // --- Image collection logic ---
+      const imagesTbody = document.getElementById('images-tbody');
+      const btnAddImage = document.getElementById('btn-add-image');
+
+      let imageRows = [];
+
+      function renderImages() {
+        imagesTbody.innerHTML = '';
+        imageRows.forEach((img, index) => {
+          const tr = document.createElement('tr');
+          tr.className = 'align-middle';
+          tr.innerHTML = `
+            <td class="py-3 pr-4">
+              <input type="text" value="${img.imagePath}" placeholder="/Imagenes/camiseta.webp" required class="img-path bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-full max-w-sm focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="text" value="${img.altText}" placeholder="Texto alt" required class="img-alt bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-44 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="number" value="${img.displayOrder}" min="0" required class="img-order bg-[#161616] border border-neutral-800 rounded-lg h-9 px-3 text-xs text-white w-20 focus:outline-none" />
+            </td>
+            <td class="py-3 pr-4">
+              <input type="radio" name="primary-image" ${img.isPrimary ? 'checked' : ''} class="img-primary rounded border-neutral-800 text-[#D4AF37] bg-[#161616] h-4 w-4" />
+            </td>
+            <td class="py-3 text-right">
+              <button type="button" class="btn-remove-img text-red-400 hover:text-red-300 font-bold px-2 py-1 text-xs">Eliminar</button>
+            </td>
+          `;
+
+          const pathInput = tr.querySelector('.img-path');
+          const altInput = tr.querySelector('.img-alt');
+          const orderInput = tr.querySelector('.img-order');
+          const primaryInput = tr.querySelector('.img-primary');
+
+          const updateImgData = () => {
+            img.imagePath = pathInput.value.trim();
+            img.altText = altInput.value.trim();
+            img.displayOrder = Number(orderInput.value);
+            // primary checked state will be read directly upon submission
+          };
+
+          pathInput.addEventListener('input', updateImgData);
+          altInput.addEventListener('input', updateImgData);
+          orderInput.addEventListener('input', updateImgData);
+          primaryInput.addEventListener('change', () => {
+            imageRows.forEach((item, idx) => {
+              item.isPrimary = idx === index;
+            });
+          });
+
+          tr.querySelector('.btn-remove-img').addEventListener('click', () => {
+            imageRows.splice(index, 1);
+            renderImages();
+          });
+
+          imagesTbody.appendChild(tr);
+        });
+      }
+
+      btnAddImage.addEventListener('click', () => {
+        const nextIdx = imageRows.length;
+        imageRows.push({
+          imagePath: '',
+          altText: prodName.value ? `Camiseta ${prodName.value.trim()}` : '',
+          displayOrder: nextIdx,
+          isPrimary: nextIdx === 0
+        });
+        renderImages();
+      });
+
+      // Push initial default image row
+      imageRows.push({
+        imagePath: '',
+        altText: '',
+        displayOrder: 0,
+        isPrimary: true
+      });
+      renderImages();
+
+
+      // --- Form Submission ---
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Sync variant SKUs based on primary SKU if left empty
+        variantRows.forEach(v => {
+          if (!v.sku && prodSku.value) {
+            v.sku = `${prodSku.value.trim().toUpperCase()}-${v.sizeCode}`;
+          }
+        });
+
+        // Set alt text if left empty
+        imageRows.forEach(img => {
+          if (!img.altText && prodName.value) {
+            img.altText = `Camiseta ${prodName.value.trim()}`;
+          }
+        });
+
+        // Read primary image selection state
+        const primaryRadio = document.querySelector('input[name="primary-image"]:checked');
+        const primaryIndex = primaryRadio 
+          ? Array.from(document.querySelectorAll('input[name="primary-image"]')).indexOf(primaryRadio)
+          : 0;
+
+        imageRows.forEach((img, idx) => {
+          img.isPrimary = idx === primaryIndex;
+        });
+
+        const payload = {
+          categoryId: Number(document.getElementById('prod-category').value),
+          slug: prodSlug.value.trim(),
+          sku: prodSku.value.trim().toUpperCase(),
+          name: prodName.value.trim(),
+          description: document.getElementById('prod-desc').value.trim() || null,
+          retailPrice: Number(document.getElementById('prod-retail').value),
+          wholesalePrice: document.getElementById('prod-wholesale').value ? Number(document.getElementById('prod-wholesale').value) : null,
+          wholesaleMinimum: document.getElementById('prod-whol-min').value ? Number(document.getElementById('prod-whol-min').value) : null,
+          featured: document.getElementById('prod-featured').checked,
+          published: document.getElementById('prod-published').checked,
+          variants: variantRows,
+          images: imageRows
+        };
+
+        const rawToken = window.csrfToken || sessionStorage.getItem('paraiso_csrf_token') || '';
+        try {
+          const res = await fetch('/api/admin/products', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': rawToken
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            window.location.href = '/admin/products';
+          } else {
+            const errData = await res.json();
+            if (errData.error?.fields) {
+              const keys = Object.keys(errData.error.fields);
+              alert(`Errores de validación:\n${keys.map(k => `- ${k}: ${errData.error.fields[k]}`).join('\n')}`);
+            } else {
+              alert(errData.error?.message || 'Error al crear producto.');
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Error de red al enviar formulario.');
+        }
+      });
+
+    });
+  </script>
+</AdminLayout>

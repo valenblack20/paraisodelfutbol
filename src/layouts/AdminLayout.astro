@@ -1,0 +1,139 @@
+---
+// src/layouts/AdminLayout.astro
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const adminContext = (Astro.locals as any).admin;
+const displayName = adminContext?.user?.displayName || 'Administrador';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} - Panel de Control</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
+    <slot name="head" />
+  </head>
+  <body class="bg-[#0c0c0c] text-neutral-100 min-h-screen font-['Outfit',sans-serif] flex flex-col">
+    <!-- Navbar Header -->
+    <header class="bg-[#121212] border-b border-neutral-900 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <span class="text-lg font-black tracking-wider text-white">EL PARAÍSO <span class="text-[#D4AF37]">DEL FÚTBOL</span></span>
+          <span class="bg-neutral-800 text-[#74ACDF] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-neutral-700">Backoffice</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-xs text-neutral-400 hidden sm:inline">Hola, <strong class="text-neutral-200">{displayName}</strong></span>
+          <a href="/" class="text-xs text-neutral-400 hover:text-white transition-colors" target="_blank">Ver tienda &nearr;</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8 flex-col lg:flex-row">
+      <!-- Sidebar Navigation -->
+      <aside class="w-full lg:w-64 shrink-0">
+        <nav class="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-3 lg:pb-0 border-b lg:border-b-0 border-neutral-900" aria-label="Navegación Admin">
+          <a 
+            href="/admin" 
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:bg-neutral-900 border border-transparent focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+            id="nav-dashboard"
+          >
+            <span>📊</span>
+            <span>Resumen</span>
+          </a>
+          <a 
+            href="/admin/products" 
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:bg-neutral-900 border border-transparent focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+            id="nav-products"
+          >
+            <span>👕</span>
+            <span>Productos</span>
+          </a>
+          <a 
+            href="/admin/categories" 
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:bg-neutral-900 border border-transparent focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+            id="nav-categories"
+          >
+            <span>📁</span>
+            <span>Categorías</span>
+          </a>
+          
+          <button 
+            id="btn-logout"
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:bg-red-950/20 text-red-400 hover:text-red-300 border border-transparent text-left w-full focus:outline-none focus:ring-2 focus:ring-red-500 lg:mt-6"
+          >
+            <span>🚪</span>
+            <span>Cerrar sesión</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Main Panel Area -->
+      <main class="flex-1 min-w-0 bg-[#121212]/50 border border-neutral-900 rounded-2xl p-6 sm:p-8">
+        <slot />
+      </main>
+    </div>
+
+    <!-- CSRF Handling & Script -->
+    <script is:inline>
+      // Load or restore CSRF token on boot
+      async function initializeCsrf() {
+        try {
+          const res = await fetch('/api/admin/auth/csrf');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.csrfToken) {
+              window.csrfToken = data.csrfToken;
+              sessionStorage.setItem('paraiso_csrf_token', data.csrfToken);
+            }
+          } else if (res.status === 401) {
+            // Expired or cleared session
+            window.location.href = '/admin/login';
+          }
+        } catch (e) {
+          console.error('[AdminLayout] Failed to load/rotate CSRF token:', e);
+        }
+      }
+
+      // Check current path to set active tab
+      const currentPath = window.location.pathname;
+      if (currentPath === '/admin') {
+        document.getElementById('nav-dashboard')?.classList.add('bg-neutral-900', 'text-[#D4AF37]', 'border-neutral-800');
+      } else if (currentPath.startsWith('/admin/products')) {
+        document.getElementById('nav-products')?.classList.add('bg-neutral-900', 'text-[#D4AF37]', 'border-neutral-800');
+      } else if (currentPath.startsWith('/admin/categories')) {
+        document.getElementById('nav-categories')?.classList.add('bg-neutral-900', 'text-[#D4AF37]', 'border-neutral-800');
+      }
+
+      // Execute CSRF loader on startup
+      initializeCsrf();
+
+      // Logout handler
+      document.getElementById('btn-logout')?.addEventListener('click', async () => {
+        if (!confirm('¿Desea cerrar la sesión de administración?')) return;
+        const rawToken = window.csrfToken || sessionStorage.getItem('paraiso_csrf_token') || '';
+        try {
+          const res = await fetch('/api/admin/auth/logout', {
+            method: 'POST',
+            headers: {
+              'x-csrf-token': rawToken
+            }
+          });
+          if (res.ok) {
+            sessionStorage.removeItem('paraiso_csrf_token');
+            window.location.href = '/admin/login';
+          } else {
+            alert('No se pudo cerrar la sesión.');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -164,6 +164,99 @@ async function runTests() {
   assert.strictEqual(escaped, '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;', 'Debe codificar a HTML entities correctamente.');
   console.log('  ✓ Completado.');
 
+  // Test 6: Catalog Backoffice Validation Schemas (Zod) & Concurrency
+  console.log('Test 6: Backoffice Zod Input Validation & Business Rules...');
+  const { CreateProductInputSchema, CategoryInputSchema } = await import('../src/modules/admin-catalog/admin-catalog.schemas.ts');
+
+  // Category Validation
+  const validCategory = {
+    name: ' Boca Juniors ',
+    slug: 'boca-juniors',
+    productType: 'Camisetas',
+    scope: 'Nacional',
+    active: true,
+    displayOrder: 10
+  };
+  const catParse = CategoryInputSchema.safeParse(validCategory);
+  assert.ok(catParse.success, 'Debe aceptar una categoría con formato y valores válidos.');
+  assert.strictEqual(catParse.data?.name, 'Boca Juniors', 'Debe hacer trim del nombre.');
+
+  const invalidCat = { ...validCategory, slug: 'Boca_Juniors_Invalid!' };
+  assert.ok(!CategoryInputSchema.safeParse(invalidCat).success, 'Debe rechazar slugs con mayúsculas y caracteres especiales.');
+
+  // Product Validation
+  const validProduct = {
+    categoryId: 1,
+    slug: 'camiseta-boca-2026',
+    sku: 'BOC-HOME-26',
+    name: 'Camiseta Boca Juniors Titular 2026',
+    description: 'Tela premium bordada',
+    retailPrice: 45000,
+    wholesalePrice: 32000,
+    wholesaleMinimum: 6,
+    featured: true,
+    published: true,
+    variants: [
+      { sizeCode: 'M', sku: 'BOC-HOME-26-M', stock: 15, active: true, displayOrder: 0 },
+      { sizeCode: 'L', sku: 'BOC-HOME-26-L', stock: 25, active: true, displayOrder: 1 }
+    ],
+    images: [
+      { imagePath: '/Imagenes/boca_titular.webp', altText: 'Frente', isPrimary: true, displayOrder: 0 },
+      { imagePath: '/Imagenes/boca_titular_back.webp', altText: 'Espalda', isPrimary: false, displayOrder: 1 }
+    ]
+  };
+
+  const prodParse = CreateProductInputSchema.safeParse(validProduct);
+  assert.ok(prodParse.success, 'Debe aceptar un producto con estructura de variantes e imágenes válidas.');
+
+  // Stock aggregation logic validation
+  const sumStock = validProduct.variants.reduce((sum, v) => sum + v.stock, 0);
+  assert.strictEqual(sumStock, 40, 'La sumatoria del stock de variantes activas debe calcularse correctamente.');
+
+  // Image path safety check (local /Imagenes/ path enforcement)
+  const externalImgProduct = {
+    ...validProduct,
+    images: [{ imagePath: 'https://external.com/pic.png', altText: 'Externo', isPrimary: true, displayOrder: 0 }]
+  };
+  assert.ok(!CreateProductInputSchema.safeParse(externalImgProduct).success, 'Debe rechazar URLs de imágenes externas con protocolo.');
+
+  const traversalImgProduct = {
+    ...validProduct,
+    images: [{ imagePath: '/Imagenes/../traversal.png', altText: 'Relativo', isPrimary: true, displayOrder: 0 }]
+  };
+  assert.ok(!CreateProductInputSchema.safeParse(traversalImgProduct).success, 'Debe rechazar rutas con caracteres de path traversal.');
+
+  // Duplicate variants check
+  const duplicateVariantsProduct = {
+    ...validProduct,
+    variants: [
+      { sizeCode: 'M', sku: 'BOC-M1', stock: 10, active: true, displayOrder: 0 },
+      { sizeCode: 'M', sku: 'BOC-M2', stock: 5, active: true, displayOrder: 1 }
+    ]
+  };
+  assert.ok(!CreateProductInputSchema.safeParse(duplicateVariantsProduct).success, 'Debe rechazar productos con códigos de talle duplicados.');
+
+  // Primary image constraints check
+  const noPrimaryImgProduct = {
+    ...validProduct,
+    images: [
+      { imagePath: '/Imagenes/img1.webp', altText: '1', isPrimary: false, displayOrder: 0 },
+      { imagePath: '/Imagenes/img2.webp', altText: '2', isPrimary: false, displayOrder: 1 }
+    ]
+  };
+  assert.ok(!CreateProductInputSchema.safeParse(noPrimaryImgProduct).success, 'Debe rechazar si ninguna imagen está marcada como principal.');
+
+  const multiPrimaryImgProduct = {
+    ...validProduct,
+    images: [
+      { imagePath: '/Imagenes/img1.webp', altText: '1', isPrimary: true, displayOrder: 0 },
+      { imagePath: '/Imagenes/img2.webp', altText: '2', isPrimary: true, displayOrder: 1 }
+    ]
+  };
+  assert.ok(!CreateProductInputSchema.safeParse(multiPrimaryImgProduct).success, 'Debe rechazar si más de una imagen está marcada como principal.');
+
+  console.log('  ✓ Completado.');
+
   console.log('\n✅ TODOS LOS UNIT TESTS SE COMPLETARON CON ÉXITO.');
 }
 

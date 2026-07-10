@@ -36,7 +36,7 @@ export class MySqlProductRepository implements ProductRepository {
       SELECT ${this.getSelectFields()}
       FROM products p
       INNER JOIN categories c ON p.category_id = c.id
-      WHERE p.published = 1 AND c.active = 1
+      WHERE p.published = 1 AND c.active = 1 AND p.archived = FALSE
       ORDER BY 
         p.featured DESC,
         c.display_order ASC,
@@ -88,7 +88,7 @@ export class MySqlProductRepository implements ProductRepository {
       SELECT ${this.getSelectFields()}
       FROM products p
       INNER JOIN categories c ON p.category_id = c.id
-      WHERE p.slug = ? AND p.published = 1 AND c.active = 1
+      WHERE p.slug = ? AND p.published = 1 AND c.active = 1 AND p.archived = FALSE
       LIMIT 1
     `;
     const [rows] = await this.pool.execute<ProductRow[]>(sql, [slug]);

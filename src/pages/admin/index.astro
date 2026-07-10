@@ -1,143 +1,97 @@
 ---
 // src/pages/admin/index.astro
-import Layout from '../../layouts/Layout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getDatabasePool } from '../../infrastructure/database/mysql';
 
 const adminContext = (Astro.locals as any).admin;
-
-// Triple check authentication just in case middleware is bypassed
 if (!adminContext.authenticated || !adminContext.user || !adminContext.session) {
   return Astro.redirect('/admin/login');
 }
 
-const { displayName, email } = adminContext.user;
-
-// Verify Database Status in real-time
 let dbStatusMessage = 'Desconectado ❌';
 let dbStatusClass = 'text-red-400 border-red-500/20 bg-red-950/20';
+
+let totalProducts = 0;
+let totalCategories = 0;
+let totalStock = 0;
 
 try {
   const pool = getDatabasePool();
   await pool.query('SELECT 1');
-  dbStatusMessage = 'Conectado a MySQL Online ✅';
+  dbStatusMessage = 'MySQL Online ✅';
   dbStatusClass = 'text-emerald-400 border-emerald-500/20 bg-emerald-950/20';
+
+  const [prodRows] = await pool.execute('SELECT COUNT(*) as cnt FROM products WHERE archived = FALSE');
+  totalProducts = (prodRows as any[])[0].cnt || 0;
+
+  const [catRows] = await pool.execute('SELECT COUNT(*) as cnt FROM categories');
+  totalCategories = (catRows as any[])[0].cnt || 0;
+
+  const [stockRows] = await pool.execute('SELECT SUM(stock) as total FROM product_variants WHERE active = TRUE');
+  totalStock = Number((stockRows as any[])[0].total || 0);
 } catch (error) {
   console.error('[Admin DB Check] Connection failure:', error);
 }
 ---
 
-<Layout title="Panel de Administración - El Paraíso del Fútbol">
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Cabecera -->
-    <div class="border-b border-neutral-900 pb-8 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<AdminLayout title="Panel de Administración">
+  <div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-900 pb-6">
       <div>
-        <div class="flex items-center gap-2 text-gold-500 font-bold text-xs uppercase tracking-widest">
-          <span>Panel de Administración Privado</span>
-          <span>★★★</span>
-        </div>
-        <h1 class="text-3xl font-extrabold uppercase mt-2">Bienvenido, {displayName}</h1>
-        <p class="text-xs text-neutral-400 mt-1">Conectado como <strong class="text-neutral-300">{email}</strong></p>
+        <h1 class="text-2xl font-black uppercase text-white tracking-wide">Resumen General</h1>
+        <p class="text-xs text-neutral-400 mt-1">Estado en tiempo real de tu tienda y base de datos.</p>
       </div>
-
-      <div class="flex items-center gap-3">
-        <span class={`border rounded-lg px-4 py-2 text-xs font-bold ${dbStatusClass}`}>
+      <div>
+        <span class={`border rounded-xl px-4 py-2 text-xs font-bold ${dbStatusClass}`}>
           {dbStatusMessage}
         </span>
-        <button
-          id="logout-btn"
-          class="bg-neutral-900 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/30 text-neutral-300 text-xs font-bold px-4 py-2 rounded-lg border border-neutral-800 transition-all duration-200"
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <!-- Products Card -->
+      <div class="bg-[#161616]/40 border border-neutral-850 rounded-2xl p-6 space-y-2">
+        <span class="text-2xl">👕</span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400">Camisetas Activas</h3>
+        <p class="text-3xl font-black text-white">{totalProducts}</p>
+      </div>
+
+      <!-- Categories Card -->
+      <div class="bg-[#161616]/40 border border-neutral-850 rounded-2xl p-6 space-y-2">
+        <span class="text-2xl">📁</span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400">Categorías</h3>
+        <p class="text-3xl font-black text-white">{totalCategories}</p>
+      </div>
+
+      <!-- Stock Card -->
+      <div class="bg-[#161616]/40 border border-neutral-850 rounded-2xl p-6 space-y-2">
+        <span class="text-2xl">📦</span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400">Stock Total</h3>
+        <p class="text-3xl font-black text-white">{totalStock} uds.</p>
+      </div>
+    </div>
+
+    <!-- Quick actions / Guide -->
+    <div class="bg-[#161616]/30 border border-neutral-850/60 rounded-2xl p-6 space-y-4">
+      <h3 class="text-sm font-bold text-white uppercase tracking-wider">Accesos Rápidos</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <a 
+          href="/admin/products" 
+          class="flex items-center justify-between p-4 bg-[#121212] hover:bg-neutral-900 border border-neutral-850 rounded-xl text-xs font-bold text-neutral-200 transition-colors"
         >
-          Cerrar Sesión
-        </button>
+          <span>Ir a Administrar Camisetas</span>
+          <span class="text-[#D4AF37]">&rarr;</span>
+        </a>
+        <a 
+          href="/admin/categories" 
+          class="flex items-center justify-between p-4 bg-[#121212] hover:bg-neutral-900 border border-neutral-850 rounded-xl text-xs font-bold text-neutral-200 transition-colors"
+        >
+          <span>Ir a Administrar Categorías</span>
+          <span class="text-[#D4AF37]">&rarr;</span>
+        </a>
       </div>
     </div>
-
-    <!-- Contenido y Placeholders -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      
-      <!-- Card Productos -->
-      <div class="bg-neutral-900/40 border border-neutral-800 rounded-2xl p-6 flex flex-col justify-between min-h-[180px]">
-        <div class="space-y-2">
-          <span class="text-2xl">👕</span>
-          <h3 class="text-base font-bold text-neutral-200">Gestión de Camisetas</h3>
-          <p class="text-xs text-neutral-400 leading-relaxed">
-            Módulo para dar de alta, modificar y eliminar camisetas en el catálogo general.
-          </p>
-        </div>
-        <div class="pt-4 border-t border-neutral-900">
-          <span class="text-[10px] bg-neutral-950 text-neutral-500 font-semibold px-2.5 py-1 rounded border border-neutral-900 uppercase">
-            Próxima Fase (Fase 5)
-          </span>
-        </div>
-      </div>
-
-      <!-- Card Variantes y Stock -->
-      <div class="bg-neutral-900/40 border border-neutral-800 rounded-2xl p-6 flex flex-col justify-between min-h-[180px]">
-        <div class="space-y-2">
-          <span class="text-2xl">📊</span>
-          <h3 class="text-base font-bold text-neutral-200">Variantes y Stock</h3>
-          <p class="text-xs text-neutral-400 leading-relaxed">
-            Control de inventario de talles (S al XXL) con límites dinámicos y SKU individual.
-          </p>
-        </div>
-        <div class="pt-4 border-t border-neutral-900">
-          <span class="text-[10px] bg-neutral-950 text-neutral-500 font-semibold px-2.5 py-1 rounded border border-neutral-900 uppercase">
-            Próxima Fase (Fase 5)
-          </span>
-        </div>
-      </div>
-
-      <!-- Card Categorías -->
-      <div class="bg-neutral-900/40 border border-neutral-800 rounded-2xl p-6 flex flex-col justify-between min-h-[180px]">
-        <div class="space-y-2">
-          <span class="text-2xl">🏷️</span>
-          <h3 class="text-base font-bold text-neutral-200">Categorías</h3>
-          <p class="text-xs text-neutral-400 leading-relaxed">
-            Administración de grupos (Clubes, Selecciones) y ámbitos (Nacional, Internacional).
-          </p>
-        </div>
-        <div class="pt-4 border-t border-neutral-900">
-          <span class="text-[10px] bg-neutral-950 text-neutral-500 font-semibold px-2.5 py-1 rounded border border-neutral-900 uppercase">
-            Próxima Fase (Fase 5)
-          </span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-</Layout>
-
-<script>
-  document.addEventListener('astro:page-load', () => {
-    const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement | null;
-    if (!logoutBtn) return;
-
-    logoutBtn.addEventListener('click', async () => {
-      // Retrieve CSRF token from sessionStorage
-      const csrfToken = sessionStorage.getItem('paraiso_csrf_token') || '';
-
-      const confirmLogout = confirm('¿Seguro que desea cerrar sesión?');
-      if (!confirmLogout) return;
-
-      try {
-        const response = await fetch('/api/admin/auth/logout', {
-          method: 'POST',
-          headers: {
-            'x-csrf-token': csrfToken
-          }
-        });
-
-        if (response.ok) {
-          sessionStorage.removeItem('paraiso_csrf_token');
-          window.location.href = '/admin/login';
-        } else {
-          const data = await response.json();
-          alert(data.error || 'Error al cerrar sesión.');
-        }
-      } catch (err) {
-        console.error('Error in logout request:', err);
-        alert('Ocurrió un error inesperado al intentar cerrar sesión.');
-      }
-    });
-  });
-</script>
+  </div>
+</AdminLayout>

@@ -163,4 +163,24 @@ export class AuthService {
   public async cleanupExpiredSessions(): Promise<number> {
     return await this.authRepository.deleteExpiredSessions();
   }
+
+  /**
+   * Generates a new CSRF token, updates its hash in the database, and returns the raw token
+   */
+  public async rotateCsrfToken(sessionToken: string): Promise<string> {
+    const tokenHash = this.sessionService.hashToken(sessionToken);
+    const sessionContext = await this.authRepository.findSessionByTokenHash(tokenHash);
+    if (!sessionContext) {
+      throw new AuthenticationError('Sesión no válida o expirada.');
+    }
+    if (this.sessionService.isExpired(sessionContext.session.expiresAt)) {
+      await this.authRepository.deleteSession(tokenHash);
+      throw new AuthenticationError('Sesión expirada.');
+    }
+
+    const newCsrfRaw = this.sessionService.generateCsrfToken();
+    const newCsrfHash = this.sessionService.hashToken(newCsrfRaw);
+    await this.authRepository.updateCsrfTokenHash(tokenHash, newCsrfHash);
+    return newCsrfRaw;
+  }
 }

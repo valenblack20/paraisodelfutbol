@@ -10,6 +10,7 @@ export interface AuthRepository {
   rotateSession(oldTokenHash: string, newTokenHash: string, expiresAt: Date): Promise<void>;
   deleteSession(tokenHash: string): Promise<void>;
   deleteExpiredSessions(): Promise<number>;
+  updateCsrfTokenHash(tokenHash: string, csrfTokenHash: string): Promise<void>;
   
   recordLoginAttempt(emailHash: string, ipHash: string, successful: boolean): Promise<void>;
   countRecentFailedAttempts(emailHash: string, ipHash: string, minutes: number): Promise<number>;

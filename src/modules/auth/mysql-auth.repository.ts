@@ -132,4 +132,11 @@ export class MySqlAuthRepository implements AuthRepository {
     if (list.length === 0) return 0;
     return list[0].failed_count || 0;
   }
+
+  public async updateCsrfTokenHash(tokenHash: string, csrfTokenHash: string): Promise<void> {
+    await this.pool.execute(
+      'UPDATE admin_sessions SET csrf_token_hash = ? WHERE token_hash = ?',
+      [csrfTokenHash, tokenHash]
+    );
+  }
 }

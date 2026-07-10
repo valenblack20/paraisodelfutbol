@@ -1,0 +1,361 @@
+---
+// src/pages/admin/categories.astro
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { adminCatalogService } from '../../modules/admin-catalog/admin-catalog.container';
+
+const adminContext = (Astro.locals as any).admin;
+if (!adminContext.authenticated) {
+  return Astro.redirect('/admin/login');
+}
+
+// Fetch all categories for display
+let categories = [];
+try {
+  categories = await adminCatalogService.getCategories();
+} catch (e) {
+  console.error('[Admin Categories] Error fetching:', e);
+}
+---
+
+<AdminLayout title="Administrar Categorías">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-900 pb-6">
+      <div>
+        <h1 class="text-2xl font-black uppercase text-white tracking-wide">Categorías</h1>
+        <p class="text-xs text-neutral-400 mt-1">Administra los grupos del catálogo (Clubes, Selecciones, etc.).</p>
+      </div>
+      <button 
+        id="btn-open-create" 
+        class="bg-[#D4AF37] hover:bg-[#b8932c] text-[#0c0c0c] text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+      >
+        + Nueva Categoría
+      </button>
+    </div>
+
+    <!-- Category Table -->
+    <div class="overflow-x-auto border border-neutral-850 rounded-2xl bg-[#121212]/30">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-neutral-850 text-neutral-400 text-[10px] font-bold uppercase tracking-wider bg-[#161616]/40">
+            <th class="px-6 py-4">Orden</th>
+            <th class="px-6 py-4">Nombre / Slug</th>
+            <th class="px-6 py-4">Tipo</th>
+            <th class="px-6 py-4">Ámbito</th>
+            <th class="px-6 py-4">Productos</th>
+            <th class="px-6 py-4">Estado</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-900 text-xs">
+          {categories.map((cat) => (
+            <tr class="hover:bg-neutral-900/30 transition-colors">
+              <td class="px-6 py-4 font-bold text-neutral-400">{cat.displayOrder}</td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-white text-sm">{cat.name}</div>
+                <div class="text-[10px] text-neutral-500 font-mono mt-0.5">{cat.slug}</div>
+              </td>
+              <td class="px-6 py-4 text-neutral-300 font-semibold">{cat.productType}</td>
+              <td class="px-6 py-4 text-neutral-300">{cat.scope}</td>
+              <td class="px-6 py-4 font-bold text-neutral-400">{cat.productCount}</td>
+              <td class="px-6 py-4">
+                <span class={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${cat.active ? 'text-emerald-400 border-emerald-500/20 bg-emerald-950/20' : 'text-neutral-500 border-neutral-800 bg-neutral-950/40'}`}>
+                  {cat.active ? 'Activa' : 'Inactiva'}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                <button 
+                  class="btn-edit-cat bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-3 py-1.5 rounded-lg border border-neutral-700 transition-colors focus:outline-none"
+                  data-cat={JSON.stringify(cat)}
+                >
+                  Editar
+                </button>
+                <button 
+                  class="btn-toggle-cat bg-neutral-900 hover:bg-neutral-850 text-neutral-300 font-bold px-3 py-1.5 rounded-lg border border-neutral-850 transition-colors focus:outline-none"
+                  data-id={cat.id}
+                  data-active={cat.active ? "true" : "false"}
+                  data-products={cat.productCount}
+                >
+                  {cat.active ? 'Desactivar' : 'Activar'}
+                </button>
+              </td>
+            </tr>
+          ))}
+          {categories.length === 0 && (
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center text-neutral-500">
+                No hay categorías cargadas en el sistema.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Form Modal (Unified Create/Edit) -->
+  <div id="modal-cat" class="fixed inset-0 z-50 bg-[#030303]/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-[#121212] border border-neutral-850 w-full max-w-md rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative">
+      <button 
+        id="btn-close-modal"
+        class="absolute top-4 right-4 text-neutral-400 hover:text-white text-lg font-bold p-1 focus:outline-none"
+      >
+        &times;
+      </button>
+
+      <div>
+        <h3 id="modal-title" class="text-lg font-black uppercase text-white tracking-wide">Nueva Categoría</h3>
+        <p class="text-[11px] text-neutral-400 mt-1">Completa los campos requeridos.</p>
+      </div>
+
+      <form id="form-cat" class="space-y-4">
+        <input type="hidden" id="cat-id" name="id" />
+
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="cat-name">Nombre</label>
+          <input 
+            type="text" 
+            id="cat-name" 
+            name="name" 
+            required 
+            class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+            placeholder="ej. River Plate"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="cat-slug">Slug (URL)</label>
+          <input 
+            type="text" 
+            id="cat-slug" 
+            name="slug" 
+            required 
+            class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
+            placeholder="ej. river-plate"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="cat-type">Tipo de Producto</label>
+            <input 
+              type="text" 
+              id="cat-type" 
+              name="productType" 
+              required 
+              class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[#D4AF37]"
+              placeholder="ej. Camisetas"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="cat-scope">Ámbito</label>
+            <select 
+              id="cat-scope" 
+              name="scope" 
+              required 
+              class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+            >
+              <option value="Nacional">Nacional</option>
+              <option value="Internacional">Internacional</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block" for="cat-order">Orden de Muestra</label>
+            <input 
+              type="number" 
+              id="cat-order" 
+              name="displayOrder" 
+              required 
+              min="0" 
+              value="0"
+              class="w-full bg-[#161616] border border-neutral-800 rounded-xl h-11 px-4 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+            />
+          </div>
+
+          <div class="space-y-1 flex flex-col justify-end pb-3">
+            <label class="flex items-center space-x-2 cursor-pointer text-xs text-neutral-300">
+              <input type="checkbox" id="cat-active" name="active" checked class="rounded border-neutral-800 text-[#D4AF37] focus:ring-0 bg-[#161616] h-4 w-4" />
+              <span>Categoría Activa</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-end gap-3">
+          <button 
+            type="button" 
+            id="btn-cancel-modal"
+            class="bg-neutral-900 hover:bg-neutral-850 text-neutral-300 font-bold px-4 py-2.5 rounded-xl text-xs uppercase transition-colors"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="bg-[#D4AF37] hover:bg-[#b8932c] text-[#0c0c0c] font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-colors"
+          >
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Client-side Interaction Logic -->
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('modal-cat');
+      const form = document.getElementById('form-cat');
+      const modalTitle = document.getElementById('modal-title');
+      const btnOpenCreate = document.getElementById('btn-open-create');
+      const btnCloseModal = document.getElementById('btn-close-modal');
+      const btnCancelModal = document.getElementById('btn-cancel-modal');
+      
+      const catIdInput = document.getElementById('cat-id');
+      const catNameInput = document.getElementById('cat-name');
+      const catSlugInput = document.getElementById('cat-slug');
+      const catTypeInput = document.getElementById('cat-type');
+      const catScopeInput = document.getElementById('cat-scope');
+      const catOrderInput = document.getElementById('cat-order');
+      const catActiveInput = document.getElementById('cat-active');
+
+      // Auto-suggest slug from name on creation
+      catNameInput.addEventListener('input', () => {
+        if (!catIdInput.value) {
+          catSlugInput.value = catNameInput.value
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        }
+      });
+
+      // Show/Close modal helpers
+      const openModal = (editData = null) => {
+        form.reset();
+        if (editData) {
+          modalTitle.textContent = 'Editar Categoría';
+          catIdInput.value = editData.id;
+          catNameInput.value = editData.name;
+          catSlugInput.value = editData.slug;
+          catTypeInput.value = editData.productType;
+          catScopeInput.value = editData.scope;
+          catOrderInput.value = editData.displayOrder;
+          catActiveInput.checked = editData.active;
+        } else {
+          modalTitle.textContent = 'Nueva Categoría';
+          catIdInput.value = '';
+          catActiveInput.checked = true;
+          catOrderInput.value = '0';
+        }
+        modal.classList.remove('hidden');
+      };
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+      };
+
+      btnOpenCreate.addEventListener('click', () => openModal());
+      btnCloseModal.addEventListener('click', closeModal);
+      btnCancelModal.addEventListener('click', closeModal);
+
+      // Bind edit action
+      document.querySelectorAll('.btn-edit-cat').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const raw = btn.getAttribute('data-cat');
+          if (raw) {
+            openModal(JSON.parse(raw));
+          }
+        });
+      });
+
+      // Bind toggle status action
+      document.querySelectorAll('.btn-toggle-cat').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const currentActive = btn.getAttribute('data-active') === "true";
+          const count = Number(btn.getAttribute('data-products') || '0');
+
+          if (currentActive && count > 0) {
+            const confirmDeact = confirm(`¡CUIDADO! Esta categoría tiene ${count} productos asociados. Si la desactivas, estos productos desaparecerán del catálogo público inmediatamente. ¿Deseas continuar?`);
+            if (!confirmDeact) return;
+          } else {
+            const confirmAct = confirm(`¿Desea cambiar el estado de activación de esta categoría?`);
+            if (!confirmAct) return;
+          }
+
+          const rawToken = window.csrfToken || sessionStorage.getItem('paraiso_csrf_token') || '';
+          try {
+            const res = await fetch(`/api/admin/categories/${id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-csrf-token': rawToken
+              },
+              body: JSON.stringify({ active: !currentActive })
+            });
+
+            if (res.ok) {
+              window.location.reload();
+            } else {
+              const errData = await res.json();
+              alert(errData.error?.message || 'Error al cambiar estado.');
+            }
+          } catch (e) {
+            console.error(e);
+            alert('Error de red al intentar actualizar la categoría.');
+          }
+        });
+      });
+
+      // Form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = catIdInput.value;
+        const url = id ? `/api/admin/categories/${id}` : '/api/admin/categories';
+        const method = id ? 'PUT' : 'POST';
+
+        const payload = {
+          name: catNameInput.value.trim(),
+          slug: catSlugInput.value.trim(),
+          productType: catTypeInput.value.trim(),
+          scope: catScopeInput.value,
+          displayOrder: Number(catOrderInput.value),
+          active: catActiveInput.checked
+        };
+
+        const rawToken = window.csrfToken || sessionStorage.getItem('paraiso_csrf_token') || '';
+        try {
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': rawToken
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeModal();
+            window.location.reload();
+          } else {
+            const errData = await res.json();
+            if (errData.error?.fields) {
+              const keys = Object.keys(errData.error.fields);
+              alert(`Errores de validación:\n${keys.map(k => `- ${k}: ${errData.error.fields[k]}`).join('\n')}`);
+            } else {
+              alert(errData.error?.message || 'Ocurrió un error inesperado al guardar la categoría.');
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          alert('Error de red al enviar la solicitud.');
+        }
+      });
+    });
+  </script>
+</AdminLayout>

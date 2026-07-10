@@ -5,6 +5,33 @@ import { AuthenticationError, RateLimitError } from '../../../../modules/auth/au
 import { env } from '../../../../infrastructure/config/env';
 
 export const POST: APIRoute = async (context) => {
+  // Validate Origin / Referer against PUBLIC_SITE_URL
+  const origin = context.request.headers.get('origin');
+  const referer = context.request.headers.get('referer');
+  const siteUrl = new URL(env.PUBLIC_SITE_URL);
+  
+  let hasValidOrigin = false;
+  try {
+    if (origin) {
+      const originUrl = new URL(origin);
+      hasValidOrigin = originUrl.hostname === siteUrl.hostname;
+    } else if (referer) {
+      const refererUrl = new URL(referer);
+      hasValidOrigin = refererUrl.hostname === siteUrl.hostname;
+    } else {
+      hasValidOrigin = !import.meta.env.PROD;
+    }
+  } catch {
+    hasValidOrigin = false;
+  }
+
+  if (!hasValidOrigin) {
+    return new Response(JSON.stringify({ error: 'Origen no autorizado.' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   // Validate Content-Type
   const contentType = context.request.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
@@ -61,7 +88,7 @@ export const POST: APIRoute = async (context) => {
         headers: { 'Content-Type': 'application/json' }
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof RateLimitError) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 429,
