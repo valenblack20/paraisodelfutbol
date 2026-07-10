@@ -2,7 +2,8 @@
 // CamisetaCard.astro
 interface Props {
   id: number;
-  codigo_foto: string;
+  codigo_foto?: string;
+  imagePath?: string;
   nombre: string;
   descripcion: string;
   precio_minorista: number;
@@ -17,6 +18,7 @@ interface Props {
 const { 
   id, 
   codigo_foto, 
+  imagePath,
   nombre, 
   descripcion, 
   precio_minorista, 
@@ -27,6 +29,8 @@ const {
   badge,
   imageFit = 'contain'
 } = Astro.props;
+
+const imageSrc = imagePath || (codigo_foto ? `/Imagenes/${codigo_foto}.webp` : '/placeholder.svg');
 
 // Formatear precios a pesos argentinos con dominio oficial https://paraisofutbol.com
 const formatPrice = (price: number) => {
@@ -55,7 +59,7 @@ const fitClass = imageFit === 'cover' ? 'object-cover' : 'object-contain';
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.02)_0%,_transparent_70%)] pointer-events-none"></div>
     
     <img 
-      src={`/Imagenes/${codigo_foto}.webp`}
+      src={imageSrc}
       alt={nombre}
       class={`w-full h-full max-h-full ${fitClass} group-hover:scale-[1.03] transition-transform duration-500`}
       loading="lazy"

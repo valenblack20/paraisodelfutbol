@@ -1,0 +1,589 @@
+Trabajá directamente sobre este repositorio:
+
+https://github.com/valenblack20/paraisodelfutbol
+
+Dominio oficial:
+
+https://paraisofutbol.com
+
+CONTEXTO
+
+La Fase 1 ya está terminada:
+
+- Astro funciona en SSR con adaptador Node.
+- Existe conexión válida a una base MySQL online.
+- La base online actualmente tiene 0 tablas.
+- Existe ProductService, ProductRepository y MySqlProductRepository.
+- El catálogo maneja errores de base de datos sin mostrar mocks.
+- /admin está bloqueado fuera de desarrollo.
+- El panel actual todavía usa localStorage y no debe conectarse todavía.
+- Las credenciales están en .env y nunca deben mostrarse ni versionarse.
+
+OBJETIVO DE ESTA FASE
+
+Implementar una fundación de base de datos versionada y repetible para el catálogo.
+
+Esta fase debe:
+
+1. crear un sistema simple de migraciones SQL;
+2. diseñar el esquema inicial correcto del catálogo;
+3. aplicar las migraciones a la base MySQL online;
+4. insertar datos semilla idempotentes;
+5. adaptar el dominio y repositorio de productos al nuevo esquema;
+6. mantener funcionando el catálogo actual;
+7. documentar y validar el proceso.
+
+NO implementar todavía:
+
+- login;
+- sesiones;
+- panel administrativo conectado;
+- endpoints POST, PUT, PATCH o DELETE;
+- pagos;
+- pedidos;
+- subida de imágenes;
+- carrito avanzado;
+- stock reservado;
+- usuarios.
+
+Todo texto visible debe permanecer en español.
+
+==================================================
+1. AUDITORÍA PREVIA
+==================================================
+
+Antes de editar, inspeccioná:
+
+- db/schema.sql
+- src/modules/products/*
+- src/pages/productos.astro
+- src/pages/index.astro
+- scripts de package.json
+- configuración MySQL
+- documentación de arquitectura
+- imágenes existentes en public/Imagenes
+
+Confirmá mediante consultas de solo lectura:
+
+- que la conexión funciona;
+- que la base seleccionada tiene 0 tablas;
+- qué permisos tiene el usuario para CREATE, ALTER, INSERT y SELECT, sin exponer credenciales.
+
+No imprimas:
+
+- DB_HOST;
+- DB_USER;
+- DB_PASSWORD;
+- DB_NAME;
+- connection strings;
+- direcciones IP.
+
+No detengas la implementación después de la auditoría.
+
+==================================================
+2. SISTEMA DE MIGRACIONES
+==================================================
+
+Implementá un sistema pequeño y explícito de migraciones SQL sin incorporar un ORM.
+
+Crear:
+
+db/migrations/
+db/seeds/
+scripts/database/
+
+Crear una tabla interna:
+
+schema_migrations
+
+Columnas mínimas:
+
+- version VARCHAR(100) PRIMARY KEY
+- applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+Crear un runner Node + TypeScript o JavaScript ESM que:
+
+- lea migraciones ordenadas por nombre;
+- consulte schema_migrations;
+- ejecute solamente las pendientes;
+- ejecute cada migración dentro de una transacción cuando MySQL lo permita;
+- registre la versión solamente después del éxito;
+- detenga el proceso ante cualquier error;
+- nunca continúe silenciosamente;
+- nunca ejecute una migración dos veces;
+- no incluya credenciales en logs;
+- sea seguro para ejecutar varias veces.
+
+Agregar scripts:
+
+- db:migrate
+- db:status
+- db:seed
+
+No agregar Prisma, Sequelize, TypeORM ni Drizzle en esta fase.
+
+==================================================
+3. REGLAS PARA LOS ARCHIVOS SQL
+==================================================
+
+Las migraciones no deben contener:
+
+- CREATE DATABASE;
+- USE nombre_base;
+- DROP DATABASE;
+- credenciales;
+- valores específicos de Hostinger.
+
+La conexión ya selecciona DB_NAME desde .env.
+
+Cada migración debe tener una responsabilidad clara.
+
+Usar nombres como:
+
+001_create_catalog_tables.sql
+002_create_catalog_indexes.sql
+
+No modificar migraciones ya aplicadas durante futuras fases.
+Las correcciones futuras deben ser nuevas migraciones.
+
+==================================================
+4. MODELO DE DATOS INICIAL
+==================================================
+
+Crear un esquema inicial moderno pero acotado.
+
+TABLA categories
+
+Campos:
+
+- id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+- name VARCHAR(100) NOT NULL
+- slug VARCHAR(120) NOT NULL UNIQUE
+- product_type ENUM('CLUB', 'NATIONAL_TEAM', 'OTHER') NOT NULL
+- scope ENUM('NATIONAL', 'INTERNATIONAL') NOT NULL
+- active BOOLEAN NOT NULL DEFAULT TRUE
+- display_order INT UNSIGNED NOT NULL DEFAULT 0
+- created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+TABLA products
+
+Campos:
+
+- id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+- category_id BIGINT UNSIGNED NOT NULL
+- slug VARCHAR(180) NOT NULL UNIQUE
+- sku VARCHAR(80) NULL UNIQUE
+- name VARCHAR(180) NOT NULL
+- description TEXT NULL
+- retail_price DECIMAL(12,2) NOT NULL
+- wholesale_price DECIMAL(12,2) NULL
+- wholesale_minimum INT UNSIGNED NOT NULL DEFAULT 6
+- stock INT UNSIGNED NOT NULL DEFAULT 0
+- primary_image_path VARCHAR(500) NOT NULL
+- featured BOOLEAN NOT NULL DEFAULT FALSE
+- published BOOLEAN NOT NULL DEFAULT TRUE
+- created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+Relación:
+
+- products.category_id -> categories.id
+- ON UPDATE RESTRICT
+- ON DELETE RESTRICT
+
+Agregar constraints o validaciones compatibles con la versión real de MySQL para asegurar:
+
+- retail_price >= 0
+- wholesale_price IS NULL o wholesale_price >= 0
+- wholesale_minimum >= 1
+- stock >= 0
+
+Si la versión del servidor no aplica CHECK realmente, validar estos invariantes en servicio y documentarlo.
+
+Agregar índices útiles:
+
+- products(category_id)
+- products(published, featured)
+- products(created_at)
+- categories(active, display_order)
+
+No crear todavía:
+
+- product_images
+- product_sizes
+- orders
+- users
+- admin_users
+- carts
+
+Esas tablas pertenecen a fases posteriores.
+
+==================================================
+5. DECISIÓN SOBRE IMÁGENES
+==================================================
+
+En esta fase, primary_image_path debe contener una ruta relativa pública, por ejemplo:
+
+/Imagenes/arg_home_3stars.webp
+
+No guardar solamente un código implícito.
+No guardar archivos binarios en MySQL.
+No implementar uploads.
+
+Mantener compatibilidad temporal con CamisetaCard mediante un mapper de presentación.
+
+==================================================
+6. DATOS SEMILLA
+==================================================
+
+Crear un seed idempotente separado de las migraciones.
+
+Insertar categorías suficientes para los productos existentes.
+
+Ejemplos conceptuales:
+
+- Selecciones nacionales
+- Clubes argentinos
+- Clubes internacionales
+
+No crear categorías duplicadas.
+
+Insertar los cinco productos de muestra actuales usando las imágenes locales existentes:
+
+- Selección Argentina
+- Boca Juniors
+- River Plate
+- Inter Miami
+- Real Madrid
+
+Requisitos:
+
+- usar slug estable;
+- usar SKU estable o null;
+- usar rutas reales existentes;
+- precios DECIMAL;
+- datos en español;
+- published = true;
+- featured = true solo para una selección razonable;
+- seed repetible sin duplicar registros;
+- usar claves únicas para upsert;
+- actualizar todos los campos relevantes al repetir el seed.
+
+No ejecutar seeds automáticamente durante el arranque normal del servidor.
+
+==================================================
+7. ACTUALIZAR MODELO DE DOMINIO
+==================================================
+
+Actualizar Product para representar el esquema nuevo.
+
+Debe incluir:
+
+- id
+- slug
+- sku
+- name
+- description
+- retailPrice
+- wholesalePrice
+- wholesaleMinimum
+- stock
+- primaryImagePath
+- featured
+- published
+- createdAt
+- updatedAt
+- category:
+  - id
+  - name
+  - slug
+  - productType
+  - scope
+
+Crear enums o uniones literales TypeScript para:
+
+- ProductType
+- ProductScope
+
+No usar any.
+
+Mantener tipos de dominio independientes de RowDataPacket.
+
+==================================================
+8. ACTUALIZAR REPOSITORIO MYSQL
+==================================================
+
+Modificar MySqlProductRepository.
+
+findCatalogProducts debe:
+
+- hacer JOIN con categories;
+- seleccionar columnas explícitas;
+- devolver solamente products.published = true;
+- devolver solamente categories.active = true;
+- ordenar primero featured DESC;
+- después categories.display_order ASC;
+- después products.created_at DESC;
+- finalmente products.id DESC.
+
+findById debe conservarse.
+
+Agregar:
+
+findBySlug(slug: string): Promise<Product | null>
+
+Todas las consultas deben:
+
+- usar execute;
+- parametrizar valores;
+- no usar SELECT *;
+- no interpolar entrada;
+- mapear filas mediante ProductMapper.
+
+Actualizar ProductRepository y ProductService.
+
+Agregar a ProductService:
+
+getProductBySlug(slug: string)
+
+No agregar métodos de escritura todavía.
+
+==================================================
+9. COMPATIBILIDAD CON LA UI ACTUAL
+==================================================
+
+Adaptar index.astro y productos.astro al nuevo modelo sin rediseñarlos.
+
+CamisetaCard debe seguir recibiendo temporalmente:
+
+- id
+- codigo_foto o equivalente
+- nombre
+- descripcion
+- precio_minorista
+- precio_mayorista
+- categoria
+- stock
+- featured
+
+La ruta de imagen debe derivarse correctamente desde primaryImagePath.
+
+Preferentemente evolucionar CamisetaCard para aceptar imagePath explícito, manteniendo compatibilidad transitoria si es necesario.
+
+No volver a introducir lógica basada en nombres de clubes.
+
+==================================================
+10. CORREGIR FILTROS DEL CATÁLOGO
+==================================================
+
+Eliminar la clasificación basada en buscar palabras como:
+
+- boca
+- river
+- argentina
+- real
+- inter miami
+
+Cada wrapper de producto debe exponer datos reales:
+
+- data-product-type
+- data-scope
+- data-category-slug
+
+Los filtros deben usar:
+
+- Todos
+- Clubes
+- Selecciones
+- Nacionales
+- Internacionales
+
+Reglas:
+
+- Clubes -> productType === CLUB
+- Selecciones -> productType === NATIONAL_TEAM
+- Nacionales -> scope === NATIONAL
+- Internacionales -> scope === INTERNATIONAL
+
+No inferir información desde nombre o descripción.
+
+Mantener el mensaje de lista vacía.
+
+Hacer inicialización idempotente para View Transitions.
+
+==================================================
+11. ACTUALIZAR schema.sql LEGACY
+==================================================
+
+No seguir usando db/schema.sql como fuente ejecutable principal.
+
+Elegir una opción:
+
+A. eliminarlo si ya quedó completamente reemplazado; o
+B. reemplazar su contenido por una nota clara que indique que las fuentes oficiales son db/migrations y db/seeds.
+
+No dejar dos esquemas contradictorios.
+
+==================================================
+12. SEGURIDAD OPERATIVA
+==================================================
+
+Antes de aplicar migraciones online:
+
+- mostrar solo nombres de migraciones pendientes;
+- no mostrar secretos;
+- no borrar tablas existentes;
+- no usar DROP;
+- no ejecutar cambios destructivos;
+- confirmar que la base está vacía mediante consulta;
+- crear una estrategia de respaldo documentada aunque la base esté vacía.
+
+La aplicación no debe ejecutar migraciones automáticamente al iniciar.
+
+Las migraciones deben ejecutarse mediante comando explícito.
+
+==================================================
+13. DOCUMENTACIÓN
+==================================================
+
+Actualizar README con:
+
+- npm run db:status
+- npm run db:migrate
+- npm run db:seed
+- orden correcto de ejecución
+- advertencia de no ejecutar seeds automáticamente
+
+Actualizar docs/database-current-state.md con el esquema ya aplicado.
+
+Crear:
+
+docs/database-migrations.md
+
+Debe explicar:
+
+- cómo crear una migración;
+- cómo se ordenan;
+- cómo se registran;
+- por qué no se editan después de aplicarlas;
+- cómo verificar estado;
+- cómo hacer backup antes de cambios futuros;
+- cómo ejecutar seed;
+- cómo recuperar un fallo sin borrar producción.
+
+No incluir secretos.
+
+==================================================
+14. APLICACIÓN EN MYSQL ONLINE
+==================================================
+
+Con el .env existente:
+
+1. ejecutar db:status;
+2. ejecutar db:migrate;
+3. ejecutar db:status otra vez;
+4. ejecutar db:seed;
+5. validar mediante SELECT de solo lectura:
+   - categorías creadas;
+   - cinco productos;
+   - relaciones válidas;
+   - slugs únicos;
+   - productos publicados;
+   - rutas de imagen correctas.
+
+Volver a ejecutar:
+
+- db:migrate
+- db:seed
+
+Y confirmar idempotencia:
+
+- cero migraciones pendientes;
+- ninguna categoría duplicada;
+- ningún producto duplicado.
+
+No reportar valores sensibles.
+
+==================================================
+15. VALIDACIÓN FUNCIONAL
+==================================================
+
+Ejecutar:
+
+npm ci
+npm run check
+npm run build
+npm run db:status
+npm start
+
+Validar:
+
+- /api/health responde 200;
+- /api/health/database responde 200;
+- /productos muestra cinco productos reales;
+- inicio muestra productos reales si corresponde;
+- los precios se renderizan correctamente;
+- imágenes existentes cargan;
+- carrito sigue funcionando;
+- filtros funcionan con productType y scope;
+- no hay SQL crudo en páginas Astro;
+- no existen mocks;
+- /admin continúa bloqueado en producción;
+- no se agregaron endpoints de escritura;
+- no se expusieron secretos.
+
+==================================================
+16. CRITERIOS DE ACEPTACIÓN
+==================================================
+
+La fase se acepta solamente si:
+
+- existe un sistema de migraciones versionado;
+- schema_migrations funciona;
+- las migraciones son idempotentes;
+- el seed es idempotente;
+- la base online contiene el esquema esperado;
+- existen categorías y cinco productos;
+- Product refleja el esquema nuevo;
+- el repositorio usa JOIN con categories;
+- el catálogo filtra por datos estructurados;
+- no se interpreta el nombre del producto;
+- el catálogo obtiene datos reales;
+- check y build pasan;
+- start funciona;
+- no se modificó el panel admin para escribir en MySQL;
+- no se implementó autenticación;
+- no se muestran secretos.
+
+==================================================
+17. INFORME FINAL
+==================================================
+
+Entregar:
+
+1. auditoría previa;
+2. versión MySQL detectada;
+3. esquema implementado;
+4. migraciones creadas;
+5. estado antes y después;
+6. datos semilla aplicados;
+7. prueba de idempotencia;
+8. cambios en Product;
+9. cambios en Repository y Service;
+10. cambios en filtros;
+11. archivos creados;
+12. archivos modificados;
+13. archivos retirados;
+14. comandos ejecutados;
+15. resultado npm ci;
+16. resultado check;
+17. resultado build;
+18. resultado start;
+19. resultado health;
+20. resultado catálogo;
+21. riesgos pendientes;
+22. recomendación para la siguiente fase.
+
+No detenerse en la planificación.
+Implementar la Fase 2 completa.

@@ -121,13 +121,14 @@ try {
       {camisetasDestacadas.map((camiseta) => (
         <CamisetaCard 
           id={camiseta.id}
-          codigo_foto={camiseta.codigoFoto}
-          nombre={camiseta.nombre}
-          descripcion={camiseta.descripcion || ''}
-          precio_minorista={camiseta.precioMinorista}
-          precio_mayorista={camiseta.precioMayorista}
-          categoria={camiseta.categoria}
+          imagePath={camiseta.primaryImagePath}
+          nombre={camiseta.name}
+          descripcion={camiseta.description || ''}
+          precio_minorista={camiseta.retailPrice}
+          precio_mayorista={camiseta.wholesalePrice || 0}
+          categoria={camiseta.category.name}
           stock={camiseta.stock}
+          featured={camiseta.featured}
         />
       ))}
     </div>

@@ -62,25 +62,25 @@ try {
           </button>
           <button 
             class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-            data-filter="Clubes"
+            data-filter="CLUB"
           >
             Clubes
           </button>
           <button 
             class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-            data-filter="Selecciones"
+            data-filter="NATIONAL_TEAM"
           >
             Selecciones
           </button>
           <button 
             class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-            data-filter="Nacionales"
+            data-filter="NATIONAL"
           >
             Nacionales
           </button>
           <button 
             class="filter-btn bg-neutral-900 text-neutral-400 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-lg border border-neutral-800 transition-all duration-300 hover:bg-neutral-800 hover:text-white hover:scale-105 active:scale-95"
-            data-filter="Internacionales"
+            data-filter="INTERNATIONAL"
           >
             Internacionales
           </button>
@@ -97,16 +97,23 @@ try {
         <!-- Grilla de Camisetas -->
         <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {camisetas.map((camiseta) => (
-            <div class="product-item-wrapper" data-category={camiseta.categoria}>
+            <div 
+              class="product-item-wrapper" 
+              data-category={camiseta.category.name}
+              data-product-type={camiseta.category.productType}
+              data-scope={camiseta.category.scope}
+              data-category-slug={camiseta.category.slug}
+            >
               <CamisetaCard 
                 id={camiseta.id}
-                codigo_foto={camiseta.codigoFoto}
-                nombre={camiseta.nombre}
-                descripcion={camiseta.descripcion || ''}
-                precio_minorista={camiseta.precioMinorista}
-                precio_mayorista={camiseta.precioMayorista}
-                categoria={camiseta.categoria}
+                imagePath={camiseta.primaryImagePath}
+                nombre={camiseta.name}
+                descripcion={camiseta.description || ''}
+                precio_minorista={camiseta.retailPrice}
+                precio_mayorista={camiseta.wholesalePrice || 0}
+                categoria={camiseta.category.name}
                 stock={camiseta.stock}
+                featured={camiseta.featured}
               />
             </div>
           ))}
@@ -139,35 +146,16 @@ try {
         // Filtrar productos
         let visibleCount = 0;
         items.forEach(item => {
-          const category = item.getAttribute('data-category');
-          // Nacionales e Internacionales pueden ser subconjuntos o etiquetas cruzadas.
-          // Si el filtro es "all", mostramos todos.
-          // Si no, verificamos si la categoría coincide exactamente,
-          // o si coincide de forma cruzada (por ejemplo, si la categoría es 'Clubes' y queremos nacionales,
-          // o basándonos en si el nombre/descripción es de argentina vs afuera).
-          // Para mantenerlo robusto y simple, el filtro busca coincidencia exacta con la categoría o si es "all".
-          // Nota: El usuario especificó: filtros básicos (Nacionales, Internacionales, Clubes, Selecciones).
-          // Si el producto tiene categoría "Clubes" pero el filtro es "Nacionales", podemos catalogar 
-          // a Boca/River como Nacionales. Hagamos que las categorías cargadas cubran esto o que el filtro
-          // haga matches lógicos simples:
-          // Nacionales: 'Clubes' argentinos (Boca, River) + 'Selecciones' (Argentina).
-          // Internacionales: 'Clubes' europeos (Real Madrid) + 'Selecciones' (Francia, etc.) + 'Internacionales'.
-          
+          const productType = item.getAttribute('data-product-type');
+          const scope = item.getAttribute('data-scope');
+
           let show = false;
           if (filter === 'all') {
             show = true;
-          } else if (filter === 'Clubes' || filter === 'Selecciones') {
-            show = (category === filter);
-          } else if (filter === 'Nacionales') {
-            // Boca, River, Argentina son Nacionales
-            const itemName = (item.querySelector('h3')?.innerText || '').toLowerCase();
-            show = (category === 'Selecciones' && itemName.includes('arg')) || 
-                   (category === 'Clubes' && (itemName.includes('boca') || itemName.includes('river')));
-          } else if (filter === 'Internacionales') {
-            // Real Madrid, Inter Miami, Francia son Internacionales
-            const itemName = (item.querySelector('h3')?.innerText || '').toLowerCase();
-            show = (category === 'Internacionales') || 
-                   (category === 'Clubes' && (itemName.includes('real') || itemName.includes('inter miami')));
+          } else if (filter === 'CLUB' || filter === 'NATIONAL_TEAM') {
+            show = (productType === filter);
+          } else if (filter === 'NATIONAL' || filter === 'INTERNATIONAL') {
+            show = (scope === filter);
           }
 
           if (show) {

@@ -76,6 +76,22 @@ npm run check
 npm run build
 ```
 
+### Comandos de Base de Datos (Migraciones y Semillas)
+
+```bash
+# Ver el estado de las migraciones (aplicadas y pendientes)
+npm run db:status
+
+# Aplicar las migraciones de esquema pendientes de forma transaccional
+npm run db:migrate
+
+# Insertar/actualizar datos semilla del catálogo de forma idempotente
+npm run db:seed
+```
+
+> [!WARNING]
+> Los datos semilla (`db:seed`) no se ejecutan automáticamente durante el inicio normal de la aplicación para evitar escrituras accidentales o sobrecargar la base de datos en producción. Deben correrse de forma manual.
+
 ### Ejecución en Producción
 
 ```bash

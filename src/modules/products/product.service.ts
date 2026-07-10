@@ -20,4 +20,14 @@ export class ProductService {
     }
     return this.productRepository.findById(id);
   }
+
+  /**
+   * Retrieves a single product by its unique slug
+   */
+  public async getProductBySlug(slug: string): Promise<Product | null> {
+    if (!slug) {
+      throw new Error('ProductService error: Slug is required');
+    }
+    return this.productRepository.findBySlug(slug);
+  }
 }
